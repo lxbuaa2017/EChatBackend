@@ -1,0 +1,111 @@
+
+join
+{
+    name: this.user.name,
+    time: utils.formatTime(new Date()),
+    avatar: this.user.photo,
+    roomid: v.id
+}
+
+getHistoryMessages
+{
+    roomid: v.id, 
+    offset: 1, 
+    limit: 200
+}
+
+setReadStatus
+{
+    roomid: r.roomid, 
+    name: this.user.name
+}
+
+getHistoryMessages
+{
+    roomid: v.id, 
+    offset: 1, 
+    limit: 100
+}
+
+mes
+{
+    name: this.user.name,
+    mes: this.message,
+    time: utils.formatTime(new Date()),
+    avatar: this.user.photo,
+    nickname: this.user.nickname,
+    read: [this.user.name],
+    roomid: this.currSation.id,
+    style: 'mess',
+    userM: this.user.id
+}
+if (type === 'emoji') { // 发送表情
+    style =  'emoji';
+    mes = '表情';
+    emoji = params;
+} else if (type === 'img') {
+    style =  'img';
+    mes = '图片';
+    emoji = params;
+} else if (type === 'file') {
+    style =  'file';
+    mes = params.name;
+    emoji = params.response.data;
+}
+
+getSystemMessages
+{
+    roomid: v.id, 
+    offset: this.offset, 
+    limit: this.limit
+}
+
+
+agreeValidate
+{
+    message对象所有字段+
+    userYphoto: this.user.photo;
+    userYname: this.user.nickname;
+}
+
+refuseValidate
+{
+    message对象所有字段+
+    userYphoto: this.user.photo;
+    userYname: this.user.nickname;
+}
+
+leave
+{
+    name: this.user.name,
+    time: utils.formatTime(new Date()),
+    avatar: this.user.photo,
+    roomid: v.id
+}
+
+sendValidate
+{
+    name: this.user.name,
+    mes: this.introduce,
+    time: utils.formatTime(new Date()),
+    avatar: this.user.photo,
+    nickname: this.user.nickname,
+    signature: this.user.signature,
+    read: [],
+    userM: this.user.id,
+    userY: this.$route.params.id,
+    userYname: friend.userYname,
+    userYphoto: friend.userYphoto,
+    userYloginName: friend.userYloginName,
+    friendRoom : this.user.id + '-' + this.$route.params.id,
+    roomid: this.$route.params.id + '-' + this.Vchat.id.split('-')[1],
+    state: 'friend',
+    type: 'validate',
+    status: '0'
+}
+
+removeMyfriends
+{
+    userM: string, //我的id
+    userY: string //对方id
+}
