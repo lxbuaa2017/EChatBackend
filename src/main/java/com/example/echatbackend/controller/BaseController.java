@@ -9,14 +9,20 @@ public abstract class BaseController {
         return requestSuccess(new JSONObject());
     }
 
+    protected ResponseEntity<Object> requestSuccess(int code) {
+        var response = new JSONObject();
+        response.put("code", code);
+        return ResponseEntity.ok(response);
+    }
+
     protected ResponseEntity<Object> requestSuccess(@NotNull JSONObject response) {
         response.put("success", true);
         return ResponseEntity.ok(response);
     }
 
-    protected ResponseEntity<Object> requestFail(String msg) {
+    protected ResponseEntity<Object> requestFail(int code, String msg) {
         var response = new JSONObject();
-        response.put("success", false);
+        response.put("code", code);
         response.put("msg", msg);
         return ResponseEntity.ok(response);
     }

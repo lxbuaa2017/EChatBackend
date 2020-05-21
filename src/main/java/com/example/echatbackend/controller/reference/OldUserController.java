@@ -3,10 +3,10 @@ package com.example.echatbackend.controller.reference;
 import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.controller.BaseController;
 import com.example.echatbackend.entity.User;
-import com.example.echatbackend.service.reference.CaptchaService;
+import com.example.echatbackend.service.EmailCaptchaService;
+import com.example.echatbackend.service.reference.OldUserService;
 import com.example.echatbackend.service.reference.SecurityService;
 import com.example.echatbackend.service.reference.TokenService;
-import com.example.echatbackend.service.reference.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,14 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin
 @RestController
-public class UserController extends BaseController {
+public class OldUserController extends BaseController {
 
     @Autowired
     private SecurityService securityService;
     @Autowired
-    private CaptchaService captchaService;
+    private EmailCaptchaService emailCaptchaService;
     @Autowired
-    private UserService userService;
+    private OldUserService userService;
     @Autowired
     private TokenService tokenService;
 
@@ -46,11 +46,11 @@ public class UserController extends BaseController {
             return new ResponseEntity<>("userName", HttpStatus.BAD_REQUEST);
         if (password == null)
             return new ResponseEntity<>("password", HttpStatus.BAD_REQUEST);
-        if (!captchaService.checkCaptcha(uuid, captcha)) {
-            return requestFail("验证码错误或已失效");
+        if (!emailCaptchaService.checkCaptcha(uuid, captcha)) {
+            return requestFail(-1, "验证码错误或已失效");
         }
         if (userService.findByUserName(userName) != null) {
-            return requestFail("该用户名已被注册");
+            return requestFail(-1, "该用户名已被注册");
         }
         var user = new User();
         user.randomSalt();
@@ -59,7 +59,7 @@ public class UserController extends BaseController {
         try {
             return loginSuccess(userService.saveAndFlush(user));
         } catch (Exception e) {
-            return requestFail("用户名已被注册");
+            return requestFail(-1, "用户名已被注册");
         }
     }
 
@@ -80,15 +80,15 @@ public class UserController extends BaseController {
             return new ResponseEntity<>("userName", HttpStatus.BAD_REQUEST);
         if (password == null)
             return new ResponseEntity<>("password", HttpStatus.BAD_REQUEST);
-        if (!captchaService.checkCaptcha(uuid, captcha)) {
-            return requestFail("验证码错误或已失效");
+        if (!emailCaptchaService.checkCaptcha(uuid, captcha)) {
+            return requestFail(-1, "验证码错误或已失效");
         }
         var user = userService.findByUserName(userName);
         if (user == null) {
-            return requestFail("用户名不存在");
+            return requestFail(-1, "用户名不存在");
         }
         if (!user.checkPassword(password)) {
-            return requestFail("密码错误");
+            return requestFail(-1, "密码错误");
         }
         return loginSuccess(user);
     }
@@ -113,15 +113,15 @@ public class UserController extends BaseController {
             return new ResponseEntity<>("password", HttpStatus.BAD_REQUEST);
         if (oldPassword == null)
             return new ResponseEntity<>("oldPassword", HttpStatus.BAD_REQUEST);
-        if (!captchaService.checkCaptcha(uuid, captcha)) {
-            return requestFail("验证码错误或已失效");
+        if (!emailCaptchaService.checkCaptcha(uuid, captcha)) {
+            return requestFail(-1, "验证码错误或已失效");
         }
         var user = userService.findByUserName(userName);
         if (user == null) {
-            return requestFail("用户名不存在");
+            return requestFail(-1, "用户名不存在");
         }
         if (!user.checkPassword(oldPassword)) {
-            return requestFail("密码错误");
+            return requestFail(-1, "密码错误");
         }
         user.setPassword(password);
         userService.saveAndFlush(user);

@@ -1,13 +1,13 @@
-package com.example.echatbackend.service.reference;
+package com.example.echatbackend.service;
 
 import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.User;
-import com.example.echatbackend.service.BaseService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService extends BaseService<User, Integer, UserRepository> {
-    public User findByUserName(String userName) {
-        return baseRepository.findByUserName(userName);
+
+    public User findUserByName(String username) {
+        return baseRepository.findByUserName(username);
     }
 }

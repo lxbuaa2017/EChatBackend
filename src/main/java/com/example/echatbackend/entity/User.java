@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.shiro.crypto.hash.Sha256Hash;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -24,6 +26,7 @@ public class User {
     @Setter
     protected String userName;
 
+    @Setter
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -79,5 +82,14 @@ public class User {
 
     public boolean checkPassword(String password) {
         return pswSHA256.equals(shaSaltSha(password, salt));
+    }
+
+    @Nullable
+    @Contract(pure = true)
+    public static String emailFormat(String email) {
+        if (email == null || !email.matches("[\\w\\.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+")) {
+            return null;
+        }
+        return email.toLowerCase();
     }
 }

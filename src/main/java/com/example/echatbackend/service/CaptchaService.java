@@ -1,4 +1,4 @@
-package com.example.echatbackend.service.reference;
+package com.example.echatbackend.service;
 
 import com.google.code.kaptcha.Producer;
 import org.jetbrains.annotations.Contract;
@@ -37,5 +37,4 @@ public class CaptchaService {
         }
         return check_pass;
     }
-
 }

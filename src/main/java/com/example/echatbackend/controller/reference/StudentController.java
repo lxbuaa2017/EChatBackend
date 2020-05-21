@@ -54,7 +54,7 @@ public class StudentController extends BaseController {
         try {
             studentService.insert(request);
         } catch (DataIntegrityViolationException e) {
-            return requestFail("该身份证号已存在");
+            return requestFail(-1, "该身份证号已存在");
         }
         return requestSuccess();
     }

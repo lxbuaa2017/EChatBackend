@@ -34,10 +34,10 @@ public class ImageController extends BaseController {
                 return requestSuccess(response);
             } catch (Exception e) {
                 e.printStackTrace();
-                return requestFail("系统异常，图片上传失败");
+                return requestFail(-1, "系统异常，图片上传失败");
             }
         }
-        return requestFail("请选择要上传的文件！");
+        return requestFail(-1, "请选择要上传的文件！");
     }
 
     @GetMapping(value = "/images/{fileName}", produces = {
