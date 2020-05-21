@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MessageController extends BaseController {
 
-    private MessageService messageService;
+    private final MessageService messageService;
 
     @Autowired
-    public MessageController() {
-        MessageService messageService;
+    public MessageController(MessageService messageService) {
+        this.messageService = messageService;
     }
 
 

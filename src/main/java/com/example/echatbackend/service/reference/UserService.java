@@ -1,6 +1,6 @@
 package com.example.echatbackend.service.reference;
 
-import com.example.echatbackend.dao.reference.UserRepository;
+import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.BaseService;
 import org.springframework.stereotype.Service;

@@ -14,8 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class FriendController extends BaseController {
 
+    private final FriendService friendService;
+
     @Autowired
-    private FriendService friendService;
+    public FriendController(FriendService friendService) {
+        this.friendService = friendService;
+    }
 
     // 查找我的好友
     @PostMapping("/friend/findMyfriends")

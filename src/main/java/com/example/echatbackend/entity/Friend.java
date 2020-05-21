@@ -11,7 +11,7 @@ import java.util.Date;
 @Entity
 @Getter
 @EntityListeners(AuditingEntityListener.class)
-public class Friend {//
+public class Friend {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     protected Integer id;

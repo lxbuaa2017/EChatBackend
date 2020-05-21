@@ -1,7 +1,9 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.service.GroupService;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin
 @RestController
 public class GroupController extends BaseController {
+
+    private final GroupService groupService;
+
+    @Autowired
+    public GroupController(GroupService groupService) {
+        this.groupService = groupService;
+    }
+
     // 创建群
     @PostMapping("/group/createGroup")
     public ResponseEntity<Object> createGroup(@NotNull @RequestBody JSONObject request) {

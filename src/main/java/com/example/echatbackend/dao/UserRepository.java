@@ -1,4 +1,4 @@
-package com.example.echatbackend.dao.reference;
+package com.example.echatbackend.dao;
 
 import com.example.echatbackend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
