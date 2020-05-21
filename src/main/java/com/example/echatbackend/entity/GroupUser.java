@@ -1,12 +1,12 @@
 package com.example.echatbackend.entity;
 
+import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 
+@Entity
+@Getter
 public class GroupUser {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -15,7 +15,7 @@ public class GroupUser {
     @OneToOne
     private Group group;  // 群id
 
-    @Setter
+    @OneToOne
     private User user;//群成员
 
     @Setter

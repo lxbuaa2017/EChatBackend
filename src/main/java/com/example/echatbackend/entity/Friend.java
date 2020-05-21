@@ -1,22 +1,25 @@
 package com.example.echatbackend.entity;
 
+import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Date;
 
+@Entity
+@Getter
+@EntityListeners(AuditingEntityListener.class)
 public class Friend {//
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     protected Integer id;
 
-    @Setter
+    @OneToOne
     private User userY;
 
-    @Setter
+    @OneToOne
     private User userM;
 
     @CreatedDate
