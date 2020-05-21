@@ -19,10 +19,10 @@ public class GroupUser {
     private User user;  // 群成员
 
     @Setter
-    private Integer isManager;  // 是否为管理员1是0否
+    private Boolean isManager;  // 是否为管理员1是0否
 
     @Setter
-    private Integer isHolder;  // 是否为群主1是0否
+    private Boolean isHolder;  // 是否为群主1是0否
 
     @Setter
     private String card;  // 群简介
