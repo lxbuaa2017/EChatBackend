@@ -17,12 +17,12 @@ public class Image {
     protected Integer id;
 
     @Setter
-    private String url;
+    private String url;//调用的url
 
     @OneToOne
-    private User uploader;  // 群主账号
+    private User uploader;  // 上传者
 
     @CreatedDate
     @Setter
-    private Date uploadDate;
+    private Date uploadDate;//上传时间
 }

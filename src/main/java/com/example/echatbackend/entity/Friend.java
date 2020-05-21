@@ -17,7 +17,7 @@ public class Friend {//
     protected Integer id;
 
     @OneToOne
-    private User userY;
+    private User userY;//由于是多对多关系故单独拿出一个表所以是两个user
 
     @OneToOne
     private User userM;
