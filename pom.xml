@@ -9,11 +9,11 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>studentinfo</artifactId>
+    <artifactId>echat</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>studentinfo</name>
-    <description>StudentInfo</description>
+    <name>echat</name>
+    <description>EChatBackend</description>
 
     <properties>
         <java.version>11</java.version>
