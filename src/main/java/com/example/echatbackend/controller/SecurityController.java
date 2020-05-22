@@ -1,7 +1,6 @@
-package com.example.echatbackend.controller.reference;
+package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.example.echatbackend.controller.BaseController;
 import com.example.echatbackend.service.CaptchaService;
 import com.example.echatbackend.service.reference.SecurityService;
 import org.apache.tomcat.util.http.fileupload.IOUtils;

@@ -1,4 +1,4 @@
-package com.example.echatbackend.service.reference;
+package com.example.echatbackend.service;
 
 import com.example.echatbackend.entity.User;
 import org.apache.commons.lang3.RandomStringUtils;

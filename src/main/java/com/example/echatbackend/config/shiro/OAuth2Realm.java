@@ -1,8 +1,8 @@
 package com.example.echatbackend.config.shiro;
 
 import com.example.echatbackend.entity.User;
+import com.example.echatbackend.service.TokenService;
 import com.example.echatbackend.service.UserService;
-import com.example.echatbackend.service.reference.TokenService;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
