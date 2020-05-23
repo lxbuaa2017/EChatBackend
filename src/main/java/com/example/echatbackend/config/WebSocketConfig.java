@@ -26,9 +26,9 @@ public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         /**
-         * myUrl:前端要对应的url
+         * ws:前端要对应的url
          */
-        registry.addEndpoint("/myUrl")
+        registry.addEndpoint("/ws")
                 .setAllowedOrigins("*")
                 .setHandshakeHandler(principalHandshakeHandler)
                 .withSockJS();
