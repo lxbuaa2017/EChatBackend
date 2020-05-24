@@ -13,7 +13,7 @@ import java.security.Principal;
 import java.util.Map;
 
 /**
- * 我们可以通过请求信息，比如token、或者session判用户是否可以连接，这样就能够防范非法用户
+ * 我们可以通过请求信息，比如token判断用户是否可以连接，这样就能够防范非法用户
  */
 @Slf4j
 @Component
@@ -21,17 +21,19 @@ public class PrincipalHandshakeHandler extends DefaultHandshakeHandler {
     @Override
     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
         /**
-         * 这边可以按你的需求，如何获取唯一的值，既unicode
+         * token应该是唯一的值，在登录时通过rest接口返回
          * 得到的值，会在监听处理连接的属性中，既WebSocketSession.getPrincipal().getName()
          * 也可以自己实现Principal()
          */
         if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
             HttpServletRequest httpRequest = servletServerHttpRequest.getServletRequest();
-            /**
-             * 这边就获取你最熟悉的陌生人,携带参数，你可以cookie，请求头，或者url携带，这边我采用url携带
-             */
             final String token = httpRequest.getParameter("token");
+
+
+            /***
+             * 待加一段代码，确定用户是否可连接：比如登录时的token存在了redis中，需要判断这里的token是否保存在redis中
+             */
             if (StringUtils.isEmpty(token)) {
                 return null;
             }
