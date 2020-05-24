@@ -34,14 +34,14 @@ public class SecurityController extends BaseController {
     }
 
     @GetMapping("/captcha.jpg")
-    public void getImageCaptcha(@NotNull HttpServletResponse response, String uuid, String useless) throws IOException {
-        if (uuid == null) {
+    public void getImageCaptcha(@NotNull HttpServletResponse response, String username, String useless) throws IOException {
+        if (username == null) {
             response.setStatus(400);
             return;
         }
         response.setHeader("Cache-Control", "no-store, no-cache");
         response.setContentType("image/jpeg");
-        var image = captchaService.createCaptcha(uuid);
+        var image = captchaService.createCaptcha(username);
         var out = response.getOutputStream();
         ImageIO.write(image, "jpg", out);
         IOUtils.closeQuietly(out);

@@ -26,19 +26,17 @@ public class User {
     @Setter
     protected String userName;
 
-    @Setter
-    @Column(nullable = false, unique = true)
-    private String email;
+    @OneToMany(cascade = CascadeType.REMOVE)
+    private final List<Conversation> conversationList = new ArrayList<>();
 
     @Setter
     private Integer gender;  // 未知 0 男 1 女 2
 
     @CreatedDate
     private Date signUpTime;
-
-    @CreatedDate
+    @Column(nullable = false, unique = true)
     @Setter
-    private Date lastLoginTime;
+    private String email;
 
     @Setter
     private String bubble = "vchat";
@@ -64,9 +62,9 @@ public class User {
 
     @Column(nullable = false, columnDefinition = "char(32)")
     private String salt;
-
-    @OneToMany(cascade = CascadeType.REMOVE)
-    private List<Conversation> conversationList = new ArrayList<>();
+    @Setter
+    @CreatedDate
+    private Date lastLoginTime;
 
     private static String shaSaltSha(String password, String salt) {
         return new Sha256Hash(new Sha256Hash(password).toHex(), salt).toHex();

@@ -3,6 +3,7 @@ package com.example.echatbackend.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.CaptchaService;
+import com.example.echatbackend.service.TokenService;
 import com.example.echatbackend.service.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +21,39 @@ public class UserController extends BaseController {
 
     private final CaptchaService captchaService;
     private final UserService userService;
+    private final TokenService tokenService;
 
     @Autowired
-    public UserController(CaptchaService captchaService, UserService userService) {
+    public UserController(CaptchaService captchaService, UserService userService, TokenService tokenService) {
         this.captchaService = captchaService;
         this.userService = userService;
+        this.tokenService = tokenService;
+    }
+
+
+    @PostMapping("/user/login")
+    public ResponseEntity<Object> login(@NotNull @RequestBody JSONObject request) {
+        String name = request.getString("name");
+        String password = request.getString("password");
+
+        if (name == null) {
+            return new ResponseEntity<>("name", HttpStatus.BAD_REQUEST);
+        }
+        if (password == null) {
+            return new ResponseEntity<>("password", HttpStatus.BAD_REQUEST);
+        }
+
+        if (userService.findUserByName(name) == null) {
+            return requestFail(-1, "用户名不存在");
+        }
+        User user = userService.findUserByName(name);
+        if (user.checkPassword(password) != true) {
+            return requestFail(-1, "密码错误");
+        }
+        var response = new JSONObject();
+        response.put("token", tokenService.createToken(user.getId()));
+        response.put("userName", user.getUserName());
+        return requestSuccess(0);
     }
 
     @PostMapping("/user/register")
@@ -64,26 +93,11 @@ public class UserController extends BaseController {
         return requestSuccess(0);
     }
 
-
-    /*
-        req:
-        {
-        name: string//用户名
-        password: string//密码
-        email: string//邮箱
-        captcha: string//验证码
-        }
-        res:
-        //注册成功
-        {
-        code:0
-        name: string//用户名
-        }
-        //注册失败
-        {
-        code:-1
-        msg: string//用户名重复、验证码错误等
-        }
-     */
-
+//    @PostMapping("/user/updateInfo")
+//    public ResponseEntity<Object> updateInfo(@NotNull @RequestBody JSONObject request) {
+//        String type = request.getString("type");
+//        String content = request.getString("content");
+//
+//
+//    }
 }
