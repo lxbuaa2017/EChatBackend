@@ -7,6 +7,7 @@ import com.example.echatbackend.entity.Message;
 import com.example.echatbackend.service.MessageService;
 import com.vdurmont.emoji.Emoji;
 import com.vdurmont.emoji.EmojiManager;
+import com.vdurmont.emoji.EmojiParser;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -53,21 +54,17 @@ public class MessageController extends BaseController {
         Collection<Emoji> allEmojis= EmojiManager.getAll();
         int num=allEmojis.size();
         org.json.JSONObject result=new org.json.JSONObject();
-        int counter=0;
-        String[] urls={};
-        String[] ids=new String[num];
-        String[] names=new String[num];
-        String[] infos=new String[num];
+        JSONObject[] resultJSON=new JSONObject[num];
+        int count=0;
         for(Emoji e:allEmojis){
-            counter++;
-            ids[counter-1]=e.getUnicode();
-            names[counter-1]=e.getAliases().get(0);
-            infos[counter-1]=e.getDescription();
+            JSONObject aEmoji=new JSONObject();
+            aEmoji.put("_id",e.getUnicode());
+            aEmoji.put("name",e.getAliases().get(0));
+            aEmoji.put("code",e.getHtmlDecimal());
+            aEmoji.put("info",e.getDescription());
+            resultJSON[count++]=aEmoji;
         }
-        result.put("list",urls);
-        result.put("_id",ids);
-        result.put("name",names);
-        result.put("info",infos);
+        result.put("list",resultJSON);
         return result.toString();
     }
 }
