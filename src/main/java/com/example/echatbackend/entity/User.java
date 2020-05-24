@@ -40,6 +40,9 @@ public class User {
     @Setter
     private Integer gender;  // 未知 0 男 1 女 2
 
+    @Setter
+    private Integer signature;
+
     @CreatedDate
     private Date signUpTime;
 

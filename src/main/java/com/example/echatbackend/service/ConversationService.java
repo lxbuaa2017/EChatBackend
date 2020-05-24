@@ -19,7 +19,7 @@ public class ConversationService extends BaseService<Conversation, Integer, Conv
 
     public Conversation addConversation(Group group) {
         Conversation conversation = new Conversation();
-        conversation.setType("friend");
+        conversation.setType("group");
         conversation.setGroup(group);
         baseRepository.saveAndFlush(conversation);
         return conversation;

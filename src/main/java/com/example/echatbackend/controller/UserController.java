@@ -39,6 +39,31 @@ public class UserController extends BaseController {
         this.userService = userService;
     }
 
+    @PostMapping("/user/login")
+    public ResponseEntity<Object> login(@NotNull @RequestBody JSONObject request) {
+        String name = request.getString("name");
+        String password = request.getString("password");
+
+        if (name == null) {
+            return new ResponseEntity<>("name", HttpStatus.BAD_REQUEST);
+        }
+        if (password == null) {
+            return new ResponseEntity<>("password", HttpStatus.BAD_REQUEST);
+        }
+
+        if (userService.findUserByName(name) == null) {
+            return requestFail(-1, "用户名不存在");
+        }
+        User user = userService.findUserByName(name);
+        if (user.checkPassword(password) != true) {
+            return requestFail(-1, "密码错误");
+        }
+        var response = new JSONObject();
+        response.put("token", tokenService.createToken(user.getId()));
+        response.put("userName", user.getUserName());
+        return requestSuccess(0);
+    }
+
     @PostMapping("/user/register")
     public ResponseEntity<Object> register(@NotNull @RequestBody JSONObject request) {
         String name = request.getString("name");
@@ -72,6 +97,26 @@ public class UserController extends BaseController {
             userService.saveAndFlush(user);
         } catch (DataIntegrityViolationException e) {
             return requestFail(-1, "用户名或邮箱已被注册");
+        }
+        return requestSuccess(0);
+    }
+
+    @PostMapping("/user/updateInfo")
+    public ResponseEntity<Object> updateInfo(@NotNull @RequestBody JSONObject request) {
+        User user = tokenService.getCurrentUser();
+        String type = request.getString("type");
+        String content = request.getString("content");
+        if (type == null) {
+            return new ResponseEntity<>("type", HttpStatus.BAD_REQUEST);
+        }
+        if (type.equals("nickname")) {
+            user.setNickname(content);
+        }
+        if (type.equals("cover")) {
+            user.setNickname(content);
+        }
+        if (type.equals("gender")) {
+            user.setNickname(content);
         }
         return requestSuccess(0);
     }
