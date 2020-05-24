@@ -42,12 +42,12 @@ public class Message {
 
     public JSONObject show() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id", id);
+        jsonObject.put("_id", id);
         jsonObject.put("mes", message);
         jsonObject.put("time", time);
         jsonObject.put("style", type);
         jsonObject.put("read", readList);
-        jsonObject.put("userId", user.getId());
+        jsonObject.put("name", user.getId());
         jsonObject.put("nickname", user.getUserName());
         jsonObject.put("avatar", user.getPhoto());
         return jsonObject;
