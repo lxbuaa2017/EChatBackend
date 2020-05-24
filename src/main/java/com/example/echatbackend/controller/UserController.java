@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
@@ -118,6 +115,9 @@ public class UserController extends BaseController {
         if (type.equals("gender")) {
             user.setNickname(content);
         }
+        if (type.equals("chatColor")) {
+            user.setNickname(content);
+        }
         return requestSuccess(0);
     }
 
@@ -171,5 +171,11 @@ public class UserController extends BaseController {
         } else {
             return requestFail(-1, "会话不存在");
         }
+    }
+
+    @GetMapping("/user/logout")
+    public ResponseEntity<Object> logout(@NotNull @RequestBody JSONObject request) {
+        tokenService.deleteToken(tokenService.getCurrentUser().getId());
+        return requestSuccess(1);
     }
 }
