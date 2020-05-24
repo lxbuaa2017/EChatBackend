@@ -26,17 +26,26 @@ public class User {
     @Setter
     protected String userName;
 
+    @Setter
+    private String nickname;
+
     @OneToMany(cascade = CascadeType.REMOVE)
-    private final List<Conversation> conversationList = new ArrayList<>();
+    @Setter
+    private List<Cover> cover = new ArrayList<>();
+
+    @Setter
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @Setter
     private Integer gender;  // 未知 0 男 1 女 2
 
     @CreatedDate
     private Date signUpTime;
-    @Column(nullable = false, unique = true)
+
+    @CreatedDate
     @Setter
-    private String email;
+    private Date lastLoginTime;
 
     @Setter
     private String bubble = "vchat";
@@ -52,9 +61,6 @@ public class User {
     private Double bgOpa = 0.2;
 
     @Setter
-    private String projectTheme = "vchat";
-
-    @Setter
     private String wallpaper = "/img/wallpaper.jpg";
 
     @Column(nullable = false, columnDefinition = "char(64)")
@@ -62,9 +68,10 @@ public class User {
 
     @Column(nullable = false, columnDefinition = "char(32)")
     private String salt;
+
     @Setter
-    @CreatedDate
-    private Date lastLoginTime;
+    @OneToMany(cascade = CascadeType.REMOVE)
+    private List<Conversation> conversationList = new ArrayList<>();
 
     private static String shaSaltSha(String password, String salt) {
         return new Sha256Hash(new Sha256Hash(password).toHex(), salt).toHex();
