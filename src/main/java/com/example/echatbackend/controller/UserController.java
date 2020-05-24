@@ -1,9 +1,10 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.entity.Conversation;
+import com.example.echatbackend.entity.Group;
 import com.example.echatbackend.entity.User;
-import com.example.echatbackend.service.CaptchaService;
-import com.example.echatbackend.service.UserService;
+import com.example.echatbackend.service.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -14,16 +15,27 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.persistence.EntityNotFoundException;
+import java.util.List;
+
 @CrossOrigin
 @RestController
 public class UserController extends BaseController {
 
     private final CaptchaService captchaService;
+    private final ConversationService conversationService;
+    private final GroupService groupService;
+    private final TokenService tokenService;
     private final UserService userService;
 
     @Autowired
-    public UserController(CaptchaService captchaService, UserService userService) {
+    public UserController(CaptchaService captchaService, ConversationService conversationService,
+                          GroupService groupService, TokenService tokenService,
+                          UserService userService) {
         this.captchaService = captchaService;
+        this.conversationService = conversationService;
+        this.groupService = groupService;
+        this.tokenService = tokenService;
         this.userService = userService;
     }
 
@@ -64,26 +76,55 @@ public class UserController extends BaseController {
         return requestSuccess(0);
     }
 
+    @PostMapping("/user/addConversation")
+    public ResponseEntity<Object> addConversation(@NotNull @RequestBody JSONObject request) {
+        User user = tokenService.getCurrentUser();
+        Integer itemId = request.getInteger("itemId");
+        if (itemId == null) {
+            return requestFail(-1, "参数错误");
+        }
+        String type = request.getString("type");
+        Conversation conversation;
+        if (type.equals("friend")) {
+            User friend = userService.findUserById(itemId);
+            if (friend == null) {
+                return requestFail(-1, "用户不存在");
+            }
+            conversation = conversationService.addConversation(friend);
+            user.getConversationList().add(conversation);
+            return requestSuccess();
+        } else if (type.equals("group")) {
+            Group group = groupService.findGroupById(itemId);
+            if (group == null) {
+                return requestFail(-1, "群组不存在");
+            }
+            conversation = conversationService.addConversation(group);
+            user.getConversationList().add(conversation);
+            return requestSuccess();
+        } else {
+            return requestFail(-1, "参数错误");
+        }
+    }
 
-    /*
-        req:
-        {
-        name: string//用户名
-        password: string//密码
-        email: string//邮箱
-        captcha: string//验证码
+    @PostMapping("/user/removeConversation")
+    public ResponseEntity<Object> removeConversation(@NotNull @RequestBody JSONObject request) {
+        User user = tokenService.getCurrentUser();
+        Conversation conversation;
+        Integer id = request.getInteger("id");
+        if (id == null) {
+            return requestFail(-1, "参数错误");
         }
-        res:
-        //注册成功
-        {
-        code:0
-        name: string//用户名
+        try {
+            conversation = conversationService.getOne(id);
+        } catch (EntityNotFoundException e) {
+            return requestFail(-1, "会话不存在");
         }
-        //注册失败
-        {
-        code:-1
-        msg: string//用户名重复、验证码错误等
+        List<Conversation> conversationList = user.getConversationList();
+        if (conversationList.contains(conversation)) {
+            conversationService.delete(conversation);
+            return requestSuccess();
+        } else {
+            return requestFail(-1, "会话不存在");
         }
-     */
-
+    }
 }
