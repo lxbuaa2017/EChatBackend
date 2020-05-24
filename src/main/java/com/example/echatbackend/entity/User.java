@@ -100,4 +100,17 @@ public class User {
         }
         return email.toLowerCase();
     }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
 }
