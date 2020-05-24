@@ -2,13 +2,14 @@ package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.service.MessageService;
+import com.vdurmont.emoji.Emoji;
+import com.vdurmont.emoji.EmojiManager;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Collection;
 
 @CrossOrigin
 @RestController
@@ -36,5 +37,29 @@ public class MessageController extends BaseController {
         }]
          */
         return null;
+    }
+
+    // 返回所有表情
+    @PostMapping("/expre/getExpression")
+    public String getExpression(){
+        Collection<Emoji> allEmojis= EmojiManager.getAll();
+        int num=allEmojis.size();
+        org.json.JSONObject result=new org.json.JSONObject();
+        int counter=0;
+        String[] urls={};
+        String[] ids=new String[num];
+        String[] names=new String[num];
+        String[] infos=new String[num];
+        for(Emoji e:allEmojis){
+            counter++;
+            ids[counter-1]=e.getUnicode();
+            names[counter-1]=e.getAliases().get(0);
+            infos[counter-1]=e.getDescription();
+        }
+        result.put("list",urls);
+        result.put("_id",ids);
+        result.put("name",names);
+        result.put("info",infos);
+        return result.toString();
     }
 }

@@ -51,8 +51,8 @@ public class UserController extends BaseController {
         User user = new User();
         user.randomSalt();
         user.setPassword(password);
-        user.setEmail(email);
-        user.setUserName(name);
+        //user.setEmail(email);
+        //user.setUserName(name);
         /*if (userService.findUserByName(name) != null) {
             return requestFail(-1, "用户名已被注册");
         }*/
