@@ -28,24 +28,25 @@ public class Message {
     @Column(nullable = false)
     private Integer roomId;
 
+    @OneToMany
+    private final List<User> readList = new ArrayList<>();
+
     @CreatedDate
     private Date time;
 
     @Setter
     private String message;
-
     @Setter
-    private String type;  // mess 常规消息 emoji 表情包 img 图片 file 文件 ...
-
-    @OneToMany
-    private List<User> readList = new ArrayList<>();
+    private Integer chatType;//0单聊1群聊
+    @Setter
+    private String messageType;  // mess 常规消息 emoji 表情包 img 图片 file 文件 ...
 
     public JSONObject show() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("_id", id);
         jsonObject.put("mes", message);
         jsonObject.put("time", time);
-        jsonObject.put("style", type);
+        jsonObject.put("style", messageType);
         jsonObject.put("read", readList);
         jsonObject.put("name", user.getId());
         jsonObject.put("nickname", user.getUserName());
