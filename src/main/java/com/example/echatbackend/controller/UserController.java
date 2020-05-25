@@ -58,7 +58,7 @@ public class UserController extends BaseController {
         var response = new JSONObject();
         response.put("token", tokenService.createToken(user.getId()));
         response.put("userName", user.getUserName());
-        return requestSuccess(0);
+        return requestSuccess(response);
     }
 
     @PostMapping("/user/register")

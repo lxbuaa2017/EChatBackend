@@ -36,17 +36,19 @@ public class Message {
 
     @Setter
     private String message;
-    @Setter
-    private Integer chatType;//0单聊1群聊
+
     @Setter
     private String messageType;  // mess 常规消息 emoji 表情包 img 图片 file 文件 ...
+    @Setter
+    private Integer chatType;//0单聊1群聊
 
     public JSONObject show() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("_id", id);
         jsonObject.put("mes", message);
         jsonObject.put("time", time);
-        jsonObject.put("style", messageType);
+        jsonObject.put("messageType", messageType);
+        jsonObject.put("chatType", chatType);
         jsonObject.put("read", readList);
         jsonObject.put("name", user.getId());
         jsonObject.put("nickname", user.getUserName());
