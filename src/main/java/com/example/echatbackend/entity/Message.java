@@ -26,7 +26,7 @@ public class Message {
 
     @Setter
     @Column(nullable = false)
-    private Integer roomId;
+    private Integer receiverId;
 
     @OneToMany
     private final List<User> readList = new ArrayList<>();
