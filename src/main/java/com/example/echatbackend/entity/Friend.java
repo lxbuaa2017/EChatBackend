@@ -25,4 +25,9 @@ public class Friend {
     @CreatedDate
     @Setter
     private Date createDate;
+
+    public String getCreateDate() {
+        return createDate.toString();
+    }
+
 }

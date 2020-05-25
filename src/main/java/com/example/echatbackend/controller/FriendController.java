@@ -34,7 +34,9 @@ public class FriendController extends BaseController {
             roomid: string //房间id
         }]
          */
-        return null;
+        int userId = Integer.parseInt(request.getString("userId"));
+        return ResponseEntity.ok(friendService.findFriend(userId));
+
     }
 
     // 验证是否已加为好友
@@ -45,6 +47,11 @@ public class FriendController extends BaseController {
             isMyfriends: bool
         }
          */
-        return null;
+        int userMid = Integer.parseInt(request.getString("userM"));
+        int userYid = Integer.parseInt(request.getString("userY"));
+        if (friendService.checkFriend(userMid, userYid))
+            return ResponseEntity.ok(true);
+        else
+            return ResponseEntity.ok(false);
     }
 }
