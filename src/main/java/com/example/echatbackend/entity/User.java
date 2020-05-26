@@ -12,7 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -34,10 +33,6 @@ public class User {
     @Setter
     private List<Cover> cover = new ArrayList<>();
 
-    @ManyToMany
-    @Setter
-    private List<User> friendList = new ArrayList<>();
-
     @Setter
     @Column(nullable = false, unique = true)
     private String email;
@@ -49,11 +44,11 @@ public class User {
     private Integer signature;
 
     @CreatedDate
-    private Date signUpTime;
+    private Long signUpTime;
 
     @CreatedDate
     @Setter
-    private Date lastLoginTime;
+    private Long lastLoginTime;
 
     @Setter
     private String bubble = "vchat";
@@ -109,9 +104,9 @@ public class User {
     public JSONObject show() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", id);
-        jsonObject.put("name", nickname);
+        jsonObject.put("nickname", nickname);
         jsonObject.put("avatar", avatar);
-        jsonObject.put("signatrue", signature);
+        jsonObject.put("signature", signature);
         return jsonObject;
     }
 

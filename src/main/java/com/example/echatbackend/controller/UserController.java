@@ -178,4 +178,26 @@ public class UserController extends BaseController {
         tokenService.deleteToken(tokenService.getCurrentUser().getId());
         return requestSuccess(1);
     }
+
+    public ResponseEntity<Object> searchFriend(@NotNull @RequestBody JSONObject request) {
+        String keyword = request.getString("keyword");
+        Integer offset = request.getInteger("offset");
+        Integer limit = request.getInteger("limit");
+        Integer type = request.getInteger("type");
+        List<User> userList;
+        if (keyword == null || offset == null || limit == null || type == null) {
+            return requestFail(-1, "参数错误");
+        }
+        keyword = keyword.trim();
+        if (type == 1) {
+            userList = userService.searchUserByName(keyword, offset - 1, limit);
+        } else if (type == 2) {
+            userList = userService.searchUserByNickname(keyword, offset - 1, limit);
+        } else {
+            return requestFail(-1, "参数错误");
+        }
+        JSONObject response = new JSONObject();
+        response.put("data", userList.stream().map(User::show).toArray());
+        return requestSuccess(response);
+    }
 }
