@@ -17,7 +17,7 @@ import java.util.Map;
 
 @RestController
 @Slf4j
-public class WebSocketController {
+public class WebSocketController extends BaseController{
 
     @Autowired
     private SimpMessagingTemplate template;

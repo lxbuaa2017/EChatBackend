@@ -40,6 +40,8 @@ public class Message {
     @OneToMany
     private List<User> readList = new ArrayList<>();
 
+
+
     public JSONObject show() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("_id", id);
