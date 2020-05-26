@@ -34,6 +34,10 @@ public class User {
     @Setter
     private List<Cover> cover = new ArrayList<>();
 
+    @ManyToMany
+    @Setter
+    private List<User> friendList = new ArrayList<>();
+
     @Setter
     @Column(nullable = false, unique = true)
     private String email;
@@ -96,22 +100,10 @@ public class User {
     @Nullable
     @Contract(pure = true)
     public static String emailFormat(String email) {
-        if (email == null || !email.matches("[\\w\\.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+")) {
+        if (email == null || !email.matches("[\\w.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+")) {
             return null;
         }
         return email.toLowerCase();
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public String getavatar() {
-        return avatar;
-    }
-
-    public Integer getId() {
-        return id;
     }
 
     public JSONObject show() {
