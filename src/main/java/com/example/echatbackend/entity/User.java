@@ -41,7 +41,7 @@ public class User {
     private Integer gender;  // 未知 0 男 1 女 2
 
     @Setter
-    private Integer signature;
+    private String signature;
 
     @CreatedDate
     private Date signUpTime;
