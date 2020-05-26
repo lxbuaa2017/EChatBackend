@@ -28,11 +28,14 @@ public class FriendService {
             JSONObject jsonobject = new JSONObject();
             Friend friend = friendRepository.findById(userId).get();
             User user = userRepository.findById(userId).get();
+            if (friend == null || user == null)
+                return null;
             jsonobject.put("createDate", friend.getCreateDate());
             jsonobject.put("nickname", user.getNickname());
             jsonobject.put("avatar", user.getAvatar());
             jsonobject.put("signature", user);
             jsonobject.put("id", user.getId());
+            jsonobject.put("gender", user.getGender());
             return jsonobject;
         } else
             return null;
