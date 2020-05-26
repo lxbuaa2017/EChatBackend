@@ -1,5 +1,6 @@
 package com.example.echatbackend.entity;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,5 +34,15 @@ public class Group {
 
     public Group() {
         this.userNum = 1;
+    }
+
+    public JSONObject show() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", id);
+        jsonObject.put("groupName", name);
+        jsonObject.put("groupDesc", description);
+        jsonObject.put("groupAvatar", avatar);
+        jsonObject.put("holder", user.id);
+        return jsonObject;
     }
 }

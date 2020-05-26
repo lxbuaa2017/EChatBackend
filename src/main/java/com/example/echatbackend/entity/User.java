@@ -45,11 +45,11 @@ public class User {
     private String signature;
 
     @CreatedDate
-    private Date signUpTime;
+    private Long signUpTime;
 
     @CreatedDate
     @Setter
-    private Date lastLoginTime;
+    private Long lastLoginTime;
 
     @Setter
     private String bubble = "vchat";
@@ -96,19 +96,18 @@ public class User {
     @Nullable
     @Contract(pure = true)
     public static String emailFormat(String email) {
-        if (email == null || !email.matches("[\\w\\.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+")) {
+        if (email == null || !email.matches("[\\w.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+")) {
             return null;
         }
         return email.toLowerCase();
     }
 
-
     public JSONObject show() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", id);
-        jsonObject.put("name", nickname);
+        jsonObject.put("nickname", nickname);
         jsonObject.put("avatar", avatar);
-        jsonObject.put("signatrue", signature);
+        jsonObject.put("signature", signature);
         return jsonObject;
     }
 

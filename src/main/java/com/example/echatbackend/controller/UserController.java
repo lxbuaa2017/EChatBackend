@@ -1,6 +1,7 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Group;
 import com.example.echatbackend.entity.User;
@@ -194,5 +195,69 @@ public class UserController extends BaseController {
     public ResponseEntity<Object> logout(@NotNull @RequestBody JSONObject request) {
         tokenService.deleteToken(tokenService.getCurrentUser().getId());
         return requestSuccess(0);
+    }
+
+    @GetMapping("/user/getUserInfo")
+    public ResponseEntity<Object> getUserInfo(){
+        User currentUser=tokenService.getCurrentUser();
+        JSONObject userInfo=new JSONObject();
+        userInfo.put("name",currentUser.getUserName());
+        userInfo.put("avatar",currentUser.getAvatar());
+        userInfo.put("wallpaper",currentUser.getWallpaper());
+        userInfo.put("nickname",currentUser.getNickname());
+        userInfo.put("signature",currentUser.getSignature());
+        userInfo.put("gender",currentUser.getGender());
+        userInfo.put("id",currentUser.getId());
+        userInfo.put("conversationsList",currentUser.getConversationList());
+        userInfo.put("bgOpa",currentUser.getBgOpa());
+
+        JSONObject result=new JSONObject();
+        result.put("code",0);
+        result.put("data",userInfo);
+        return requestSuccess(result);
+    }
+
+    @PostMapping("/user/updateUserInfo")
+    public ResponseEntity<Object> updateUserInfo(@NotNull @RequestBody JSONObject request) {
+        User currentUser = tokenService.getCurrentUser();
+        String type = request.getString("type");
+        String content = request.getString("content");
+        if (type == "nickname") {
+            currentUser.setNickname(content);
+        } else if (type == "signature") {
+            currentUser.setSignature(content);
+        } else if (type == "avatar") {
+            currentUser.setAvatar(content);
+        } else if (type == "wallpaper") {
+            currentUser.setWallpaper(content);
+        } else if (type == "chatColor") {
+            currentUser.setChatColor(content);
+        } else {
+            return requestFail(-1, "请指定正确的字段名");
+        }
+        userService.save(currentUser);
+        return requestSuccess(0);
+    }
+
+    public ResponseEntity<Object> searchFriend(@NotNull @RequestBody JSONObject request) {
+        String keyword = request.getString("keyword");
+        Integer offset = request.getInteger("offset");
+        Integer limit = request.getInteger("limit");
+        Integer type = request.getInteger("type");
+        List<User> userList;
+        if (keyword == null || offset == null || limit == null || type == null) {
+            return requestFail(-1, "参数错误");
+        }
+        keyword = keyword.trim();
+        if (type == 1) {
+            userList = userService.searchUserByName(keyword, offset - 1, limit);
+        } else if (type == 2) {
+            userList = userService.searchUserByNickname(keyword, offset - 1, limit);
+        } else {
+            return requestFail(-1, "参数错误");
+        }
+        JSONObject response = new JSONObject();
+        response.put("data", userList.stream().map(User::show).toArray());
+        return requestSuccess(response);
     }
 }

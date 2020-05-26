@@ -30,7 +30,7 @@ public class FriendService {
             User user = userRepository.findById(userId).get();
             jsonobject.put("createDate", friend.getCreateDate());
             jsonobject.put("nickname", user.getNickname());
-            jsonobject.put("avatar", user.getavatar());
+            jsonobject.put("avatar", user.getAvatar());
             jsonobject.put("signature", user);
             jsonobject.put("id", user.getId());
             return jsonobject;

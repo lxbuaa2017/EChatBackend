@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 @CrossOrigin
 @RestController
@@ -103,23 +104,24 @@ public class GroupController extends BaseController {
     // 查找群基本信息
     @PostMapping("/group/searchGroup")
     public ResponseEntity<Object> searchGroup(@NotNull @RequestBody JSONObject request) {
-        /*[{
-            groupId:number //群id
-            groupName:string//群名
-            groupDesc string//群简介
-            groupImage: string//群头像
-            holderName: string//群主
-            },
-            {…
-            }]
-        */
-        return null;
-    }
-
-    // 群详细信息
-    @PostMapping("/group/getGroupDetailed")
-    public ResponseEntity<Object> getGroupDetailed(@NotNull @RequestBody JSONObject request) {
-        // 见文档
-        return null;
+        String keyword = request.getString("keyword");
+        Integer offset = request.getInteger("offset");
+        Integer limit = request.getInteger("limit");
+        Integer type = request.getInteger("type");
+        List<Group> groupList;
+        if (keyword == null || offset == null || limit == null || type == null) {
+            return requestFail(-1, "参数错误");
+        }
+        keyword = keyword.trim();
+        if (type == 1) {
+            groupList = groupService.searchGroupByCode(keyword, offset - 1, limit);
+        } else if (type == 2) {
+            groupList = groupService.searchGroupByName(keyword, offset - 1, limit);
+        } else {
+            return requestFail(-1, "参数错误");
+        }
+        JSONObject response = new JSONObject();
+        response.put("data", groupList.stream().map(Group::show).toArray());
+        return requestSuccess(response);
     }
 }

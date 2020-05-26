@@ -26,13 +26,13 @@ public class Message {
 
     @Setter
     @Column(nullable = false)
-    private Integer receiverId;
+    private Integer conversationId;
 
     @OneToMany
     private final List<User> readList = new ArrayList<>();
 
     @CreatedDate
-    private Date time;
+    private Long time;
 
     @Setter
     private String message;
@@ -48,12 +48,12 @@ public class Message {
         jsonObject.put("id", id);
         jsonObject.put("mes", message);
         jsonObject.put("time", time);
-        jsonObject.put("messageType", messageType);
-        jsonObject.put("chatType", chatType);
+        jsonObject.put("style", messageType);
         jsonObject.put("read", readList);
-        jsonObject.put("name", user.getId());
+        jsonObject.put("name", user.userName);
+        jsonObject.put("userId", user.id);
         jsonObject.put("nickname", user.getUserName());
-        jsonObject.put("avatar", user.getavatar());
+        jsonObject.put("avatar", user.getAvatar());
         return jsonObject;
     }
 
