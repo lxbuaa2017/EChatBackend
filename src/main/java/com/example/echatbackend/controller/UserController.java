@@ -1,7 +1,6 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Group;
 import com.example.echatbackend.entity.User;
@@ -66,8 +65,7 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/user/sendEmail")
-    public ResponseEntity<Object> sendEmail(@NotNull @RequestBody JSONObject request) {
-        String email = request.getString("email");
+    public ResponseEntity<Object> sendEmail(String email) {
         if (email == null) {
             return new ResponseEntity<>("email", HttpStatus.BAD_REQUEST);
         }
@@ -192,7 +190,7 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/user/logout")
-    public ResponseEntity<Object> logout(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> logout() {
         tokenService.deleteToken(tokenService.getCurrentUser().getId());
         return requestSuccess(0);
     }

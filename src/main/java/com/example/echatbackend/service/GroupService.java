@@ -20,11 +20,13 @@ public class GroupService extends BaseService<Group, Integer, GroupRepository> {
 
     private final GroupUserRepository groupUserRepository;
     private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
 
     @Autowired
-    public GroupService(GroupUserRepository groupUserRepository, UserRepository userRepository) {
+    public GroupService(GroupUserRepository groupUserRepository, UserRepository userRepository, GroupRepository groupRepository) {
         this.groupUserRepository = groupUserRepository;
         this.userRepository = userRepository;
+        this.groupRepository = groupRepository;
     }
 
     public Group findGroupById(int id) {
@@ -50,5 +52,10 @@ public class GroupService extends BaseService<Group, Integer, GroupRepository> {
         Specification<Group> groupSpecification = (Specification<Group>) (root, criteriaQuery, cb) -> cb.like(root.get("name"), "%" + keyword + "%");
         Sort sort = Sort.by(Sort.Order.asc("name"));
         return baseRepository.findAll(groupSpecification, PageRequest.of(offset, limit, sort)).getContent();
+    }
+
+    public Group[] findGroupByUser(User user) {
+        List<GroupUser> groupUsers = groupUserRepository.findAllByUser(user);
+        return groupUsers.stream().map(GroupUser::getGroup).toArray(Group[]::new);
     }
 }
