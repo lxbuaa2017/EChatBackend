@@ -53,7 +53,7 @@ public class UserController extends BaseController {
             return requestFail(-1, "用户名不存在");
         }
         User user = userService.findUserByName(name);
-        if (user.checkPassword(password) != true) {
+        if (!user.checkPassword(password)) {
             return requestFail(-1, "密码错误");
         }
         var response = new JSONObject();
@@ -185,7 +185,7 @@ public class UserController extends BaseController {
         User currentUser=tokenService.getCurrentUser();
         JSONObject userInfo=new JSONObject();
         userInfo.put("name",currentUser.getUserName());
-        userInfo.put("avatar",currentUser.getPhoto());
+        userInfo.put("avatar",currentUser.getAvatar());
         userInfo.put("wallpaper",currentUser.getWallpaper());
         userInfo.put("nickname",currentUser.getNickname());
         userInfo.put("signature",currentUser.getSignature());
@@ -201,29 +201,46 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/user/updateUserInfo")
-    public ResponseEntity<Object> updateUserInfo(@NotNull @RequestBody JSONObject request){
-        User currentUser=tokenService.getCurrentUser();
-        String type=request.getString("type");
-        String content=request.getString("content");
-        if(type=="nickname"){
+    public ResponseEntity<Object> updateUserInfo(@NotNull @RequestBody JSONObject request) {
+        User currentUser = tokenService.getCurrentUser();
+        String type = request.getString("type");
+        String content = request.getString("content");
+        if (type == "nickname") {
             currentUser.setNickname(content);
-        }
-        else if(type=="signature"){
+        } else if (type == "signature") {
             currentUser.setSignature(content);
-        }
-        else if(type=="avatar"){
-            currentUser.setPhoto(content);
-        }
-        else if(type=="wallpaper"){
+        } else if (type == "avatar") {
+            currentUser.setAvatar(content);
+        } else if (type == "wallpaper") {
             currentUser.setWallpaper(content);
-        }
-        else if(type=="chatColor"){
+        } else if (type == "chatColor") {
             currentUser.setChatColor(content);
-        }
-        else{
-            return requestFail(-1,"请指定正确的字段名");
+        } else {
+            return requestFail(-1, "请指定正确的字段名");
         }
         userService.save(currentUser);
         return requestSuccess(0);
+    }
+
+    public ResponseEntity<Object> searchFriend(@NotNull @RequestBody JSONObject request) {
+        String keyword = request.getString("keyword");
+        Integer offset = request.getInteger("offset");
+        Integer limit = request.getInteger("limit");
+        Integer type = request.getInteger("type");
+        List<User> userList;
+        if (keyword == null || offset == null || limit == null || type == null) {
+            return requestFail(-1, "参数错误");
+        }
+        keyword = keyword.trim();
+        if (type == 1) {
+            userList = userService.searchUserByName(keyword, offset - 1, limit);
+        } else if (type == 2) {
+            userList = userService.searchUserByNickname(keyword, offset - 1, limit);
+        } else {
+            return requestFail(-1, "参数错误");
+        }
+        JSONObject response = new JSONObject();
+        response.put("data", userList.stream().map(User::show).toArray());
+        return requestSuccess(response);
     }
 }

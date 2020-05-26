@@ -1,15 +1,16 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.CaptchaService;
+import com.example.echatbackend.service.EmailCaptchaService;
 import com.example.echatbackend.service.reference.SecurityService;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
@@ -23,6 +24,8 @@ public class SecurityController extends BaseController {
     private SecurityService securityService;
     @Autowired
     private CaptchaService captchaService;
+    @Autowired
+    private EmailCaptchaService emailCaptchaService;
 
     @GetMapping("/publicKey")
     public ResponseEntity<JSONObject> getPublicKey() {
@@ -45,5 +48,15 @@ public class SecurityController extends BaseController {
         var out = response.getOutputStream();
         ImageIO.write(image, "jpg", out);
         IOUtils.closeQuietly(out);
+    }
+
+    @PostMapping("sendEmailCaptcha")
+    public ResponseEntity<Object> sendEmailCaptcha(@NotNull @RequestBody JSONObject request) {
+        var email = User.emailFormat(request.getString("email"));
+        if (email == null) {
+            return new ResponseEntity<>("email", HttpStatus.BAD_REQUEST);
+        }
+        emailCaptchaService.sendCaptcha(email);
+        return requestSuccess();
     }
 }
