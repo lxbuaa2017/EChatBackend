@@ -42,7 +42,7 @@ public class User {
     private Integer gender;  // 未知 0 男 1 女 2
 
     @Setter
-    private Integer signature;
+    private String signature;
 
     @CreatedDate
     private Date signUpTime;
@@ -102,17 +102,6 @@ public class User {
         return email.toLowerCase();
     }
 
-    public String getNickname() {
-        return nickname;
-    }
-
-    public String getavatar() {
-        return avatar;
-    }
-
-    public Integer getId() {
-        return id;
-    }
 
     public JSONObject show() {
         JSONObject jsonObject = new JSONObject();

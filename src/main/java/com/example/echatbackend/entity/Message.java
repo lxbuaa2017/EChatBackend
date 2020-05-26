@@ -53,7 +53,7 @@ public class Message {
         jsonObject.put("read", readList);
         jsonObject.put("name", user.getId());
         jsonObject.put("nickname", user.getUserName());
-        jsonObject.put("avatar", user.getPhoto());
+        jsonObject.put("avatar", user.getavatar());
         return jsonObject;
     }
 
