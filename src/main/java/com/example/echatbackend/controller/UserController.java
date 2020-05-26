@@ -52,7 +52,7 @@ public class UserController extends BaseController {
             return requestFail(-1, "用户名不存在");
         }
         User user = userService.findUserByName(name);
-        if (user.checkPassword(password) != true) {
+        if (!user.checkPassword(password)) {
             return requestFail(-1, "密码错误");
         }
         var response = new JSONObject();

@@ -33,7 +33,6 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
     public Page<Message> getMoreMessage(int roomId, int offset, int limit) {
         Specification<Message> messageSpecification = (Specification<Message>) (root, criteriaQuery, cb) -> cb.equal(root.get("roomId"), roomId);
         Sort sort = Sort.by(Sort.Order.asc("name"));
-        Page<Message> messages = baseRepository.findAll(messageSpecification, PageRequest.of(offset, limit, sort));
-        return messages;
+        return baseRepository.findAll(messageSpecification, PageRequest.of(offset, limit, sort));
     }
 }

@@ -7,15 +7,16 @@ import com.example.echatbackend.entity.Message;
 import com.example.echatbackend.service.MessageService;
 import com.vdurmont.emoji.Emoji;
 import com.vdurmont.emoji.EmojiManager;
-import com.vdurmont.emoji.EmojiParser;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
-
 import java.util.List;
 
 @CrossOrigin
@@ -56,21 +57,21 @@ public class MessageController extends BaseController {
 
     // 返回所有表情
     @PostMapping("/expre/getExpression")
-    public String getExpression(){
-        Collection<Emoji> allEmojis= EmojiManager.getAll();
-        int num=allEmojis.size();
-        org.json.JSONObject result=new org.json.JSONObject();
-        JSONObject[] resultJSON=new JSONObject[num];
-        int count=0;
-        for(Emoji e:allEmojis){
-            JSONObject aEmoji=new JSONObject();
-            aEmoji.put("_id",e.getUnicode());
-            aEmoji.put("name",e.getAliases().get(0));
-            aEmoji.put("code",e.getHtmlDecimal());
-            aEmoji.put("info",e.getDescription());
-            resultJSON[count++]=aEmoji;
+    public ResponseEntity<Object> getExpression() {
+        Collection<Emoji> allEmojis = EmojiManager.getAll();
+        int num = allEmojis.size();
+        JSONObject result = new JSONObject();
+        JSONObject[] resultJSON = new JSONObject[num];
+        int count = 0;
+        for (Emoji e : allEmojis) {
+            JSONObject aEmoji = new JSONObject();
+            aEmoji.put("_id", e.getUnicode());
+            aEmoji.put("name", e.getAliases().get(0));
+            aEmoji.put("code", e.getHtmlDecimal());
+            aEmoji.put("info", e.getDescription());
+            resultJSON[count++] = aEmoji;
         }
-        result.put("list",resultJSON);
-        return result.toString();
+        result.put("list", resultJSON);
+        return requestSuccess(result);
     }
 }

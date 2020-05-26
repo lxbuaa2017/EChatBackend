@@ -1,5 +1,6 @@
 package com.example.echatbackend.entity;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -54,7 +55,7 @@ public class User {
     private String bubble = "vchat";
 
     @Setter
-    private String photo = "/img/picture.png";
+    private String avatar = "/img/picture.png";
 
     @Setter
     private String chatColor = "#ffffff";
@@ -105,12 +106,21 @@ public class User {
         return nickname;
     }
 
-    public String getPhoto() {
-        return photo;
+    public String getavatar() {
+        return avatar;
     }
 
     public Integer getId() {
         return id;
+    }
+
+    public JSONObject show() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", id);
+        jsonObject.put("name", nickname);
+        jsonObject.put("avatar", avatar);
+        jsonObject.put("signatrue", signature);
+        return jsonObject;
     }
 
 }
