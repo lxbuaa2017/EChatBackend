@@ -6,7 +6,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
-import java.util.Date;
 
 @Entity
 @Getter
@@ -24,7 +23,7 @@ public class Friend {
 
     @CreatedDate
     @Setter
-    private Date createDate;
+    private Long createDate;
 
     public String getCreateDate() {
         return createDate.toString();

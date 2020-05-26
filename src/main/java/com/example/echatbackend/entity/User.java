@@ -1,5 +1,6 @@
 package com.example.echatbackend.entity;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -11,7 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -41,20 +41,20 @@ public class User {
     private Integer gender;  // 未知 0 男 1 女 2
 
     @Setter
-    private Integer signature;
+    private String signature;
 
     @CreatedDate
-    private Date signUpTime;
+    private Long signUpTime;
 
     @CreatedDate
     @Setter
-    private Date lastLoginTime;
+    private Long lastLoginTime;
 
     @Setter
     private String bubble = "vchat";
 
     @Setter
-    private String photo = "/img/picture.png";
+    private String avatar = "/img/picture.png";
 
     @Setter
     private String chatColor = "#ffffff";
@@ -95,22 +95,19 @@ public class User {
     @Nullable
     @Contract(pure = true)
     public static String emailFormat(String email) {
-        if (email == null || !email.matches("[\\w\\.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+")) {
+        if (email == null || !email.matches("[\\w.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+")) {
             return null;
         }
         return email.toLowerCase();
     }
 
-    public String getNickname() {
-        return nickname;
-    }
-
-    public String getPhoto() {
-        return photo;
-    }
-
-    public Integer getId() {
-        return id;
+    public JSONObject show() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", id);
+        jsonObject.put("nickname", nickname);
+        jsonObject.put("avatar", avatar);
+        jsonObject.put("signature", signature);
+        return jsonObject;
     }
 
 }

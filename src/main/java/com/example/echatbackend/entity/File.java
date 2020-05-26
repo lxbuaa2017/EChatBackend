@@ -6,7 +6,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
-import java.util.Date;
 
 @Entity
 @Getter
@@ -24,5 +23,5 @@ public class File {
 
     @CreatedDate
     @Setter
-    private Date uploadDate;  // 上传时间
+    private Long uploadDate;  // 上传时间
 }
