@@ -243,4 +243,23 @@ public class UserController extends BaseController {
         response.put("data", userList.stream().map(User::show).toArray());
         return requestSuccess(response);
     }
+
+    @GetMapping("/user/updateUserGender")
+    public ResponseEntity<Object> updateUserGender(@NotNull @RequestBody JSONObject request) {
+        User user = tokenService.getCurrentUser();
+        Integer gender = request.getInteger("gender");
+        if (gender != 0 && gender != 1 && gender != 2)
+            return requestFail(-1, "第四性别不存在");
+        else {
+            user.setGender(gender);
+            return requestSuccess(0);
+        }
+    }
+
+    @GetMapping("/user/updateBgOpa")
+    public ResponseEntity<Object> updateBgOpa(@NotNull @RequestBody JSONObject request) {
+        User user = tokenService.getCurrentUser();
+        user.setBgOpa(request.getDouble("bgOpa"));
+        return requestSuccess(0);
+    }
 }

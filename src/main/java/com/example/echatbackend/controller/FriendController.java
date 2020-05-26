@@ -41,7 +41,7 @@ public class FriendController extends BaseController {
 
     // 验证是否已加为好友
     @PostMapping("/friend/checkMyfriends")
-    public ResponseEntity<Object> getGroupDetailed(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> checkMyfriends(@NotNull @RequestBody JSONObject request) {
         /*
         {
             isMyfriends: bool
