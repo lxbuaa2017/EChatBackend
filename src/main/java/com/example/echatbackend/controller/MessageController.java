@@ -3,8 +3,6 @@ package com.example.echatbackend.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.entity.Message;
 import com.example.echatbackend.service.MessageService;
-import com.vdurmont.emoji.Emoji;
-import com.vdurmont.emoji.EmojiManager;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
