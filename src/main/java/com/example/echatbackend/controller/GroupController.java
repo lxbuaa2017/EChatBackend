@@ -59,7 +59,7 @@ public class GroupController extends BaseController {
 
     // 查找我的群
     @GetMapping("/group/getMyGroup")
-    public ResponseEntity<Object> getMyGroup(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> getMyGroup() {
         /*res
             {
             groupId:number //群id
@@ -69,10 +69,11 @@ public class GroupController extends BaseController {
             holderName: string//群主
             }
         */
-
-        Integer groupId = request.getInteger("groupId");
-        String groupName = request.getString("groupName");
-        return null;
+        User user = tokenService.getCurrentUser();
+        Group[] groups = groupService.findGroupByUser(user);
+        JSONObject response = new JSONObject();
+        response.put("data", Arrays.stream(groups).map(Group::show).toArray(JSONObject[]::new));
+        return requestSuccess(response);
     }
 
     // 查找群内成员

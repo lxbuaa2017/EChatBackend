@@ -3,13 +3,11 @@ package com.example.echatbackend.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.entity.Message;
 import com.example.echatbackend.service.MessageService;
-
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
 import java.util.List;
 
 @CrossOrigin

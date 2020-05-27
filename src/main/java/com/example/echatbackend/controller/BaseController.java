@@ -16,7 +16,7 @@ public abstract class BaseController {
     }
 
     protected ResponseEntity<Object> requestSuccess(@NotNull JSONObject response) {
-        response.put("success", true);
+        response.put("code", 0);
         return ResponseEntity.ok(response);
     }
 

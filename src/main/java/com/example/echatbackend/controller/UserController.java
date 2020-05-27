@@ -1,7 +1,6 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Group;
 import com.example.echatbackend.entity.User;
@@ -25,16 +24,18 @@ public class UserController extends BaseController {
     private final GroupService groupService;
     private final TokenService tokenService;
     private final UserService userService;
+    private final EmailCaptchaService emailCaptchaService;
 
     @Autowired
     public UserController(CaptchaService captchaService, ConversationService conversationService,
                           GroupService groupService, TokenService tokenService,
-                          UserService userService) {
+                          UserService userService, EmailCaptchaService emailCaptchaService) {
         this.captchaService = captchaService;
         this.conversationService = conversationService;
         this.groupService = groupService;
         this.tokenService = tokenService;
         this.userService = userService;
+        this.emailCaptchaService = emailCaptchaService;
     }
 
     @PostMapping("/user/login")
@@ -58,8 +59,22 @@ public class UserController extends BaseController {
         }
         var response = new JSONObject();
         response.put("token", tokenService.createToken(user.getId()));
-        response.put("userName", user.getUserName());
+        response.put("nickname", user.getNickname());
+        response.put("avatar", user.getAvatar());
         return requestSuccess(response);
+    }
+
+    @GetMapping("/user/sendEmail")
+    public ResponseEntity<Object> sendEmail(String email) {
+        if (email == null) {
+            return new ResponseEntity<>("email", HttpStatus.BAD_REQUEST);
+        }
+        try {
+            emailCaptchaService.sendCaptcha(email);
+        } catch (Exception e) {
+            return requestFail(-1, "发送邮件失败");
+        }
+        return requestSuccess(0);
     }
 
     @PostMapping("/user/register")
@@ -80,8 +95,8 @@ public class UserController extends BaseController {
         if (captcha == null) {
             return new ResponseEntity<>("captcha", HttpStatus.BAD_REQUEST);
         }
-        if (!captchaService.checkCaptcha(email, captcha)) {
-            return requestFail(-1, "验证码错误或已失效");
+        if (!emailCaptchaService.checkCaptcha(email, captcha)) {
+            return requestFail(-1, "邮箱验证码错误");
         }
         User user = new User();
         user.randomSalt();
@@ -175,9 +190,9 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/user/logout")
-    public ResponseEntity<Object> logout(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> logout() {
         tokenService.deleteToken(tokenService.getCurrentUser().getId());
-        return requestSuccess(1);
+        return requestSuccess(0);
     }
 
     @GetMapping("/user/getUserInfo")
@@ -222,6 +237,7 @@ public class UserController extends BaseController {
         return requestSuccess(0);
     }
 
+    @PostMapping("/user/searchFriend")
     public ResponseEntity<Object> searchFriend(@NotNull @RequestBody JSONObject request) {
         String keyword = request.getString("keyword");
         Integer offset = request.getInteger("offset");

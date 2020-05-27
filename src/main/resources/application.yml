@@ -48,9 +48,9 @@ spring:
         min-idle: 5
 
   mail:
-    host: smtp.mxhichina.com
-    username: register@tongshu.online
-    password: Buaa1721
+    host: smtp.qq.com
+    username: 1134220742@qq.com
+    password: mgctqyfqxqmohadh
     default-encoding: UTF-8
     properties:
       mail:
