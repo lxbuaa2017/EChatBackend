@@ -237,6 +237,7 @@ public class UserController extends BaseController {
         return requestSuccess(0);
     }
 
+    @PostMapping("/user/searchFriend")
     public ResponseEntity<Object> searchFriend(@NotNull @RequestBody JSONObject request) {
         String keyword = request.getString("keyword");
         Integer offset = request.getInteger("offset");

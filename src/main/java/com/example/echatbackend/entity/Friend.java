@@ -16,10 +16,10 @@ public class Friend {
     protected Integer id;
 
     @OneToOne
-    private User userY;  // 由于是多对多关系故单独拿出一个表所以是两个user
+    private User userY;  // 由于是多对多关系故单独拿出一个表所以是两个user，userY代表userid较小的
 
     @OneToOne
-    private User userM;
+    private User userM;//userM代表userid较大的
 
     @CreatedDate
     @Setter
