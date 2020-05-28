@@ -6,7 +6,12 @@ import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.*;
+import com.example.echatbackend.dao.MessageRepository;
+import com.example.echatbackend.dao.UserRepository;
+import com.example.echatbackend.entity.Message;
+import com.example.echatbackend.entity.User;
 import com.example.echatbackend.util.EncodeUtil;
+import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,34 +30,31 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 @Component
+@Data
 public class SocketHandler {
 
     /**
      * logger
      */
     private Logger logger = LoggerFactory.getLogger(SocketHandler.class);
-
     /**
      * ConcurrentHashMap保存当前SocketServer用户ID对应关系
      */
     private Map<String, UUID> clientMap = new ConcurrentHashMap<>(16);
 
-    public Map<String, UUID> getClientMap() {
-        return clientMap;
-    }
+    private MessageRepository messageRepository;
 
-    public void setClientMap(Map<String, UUID> clientMap) {
-        this.clientMap = clientMap;
-    }
-
+    private UserRepository userRepository;
     /**
      * socketIOServer
      */
     private final SocketIOServer socketIOServer;
 
     @Autowired
-    public SocketHandler(SocketIOServer socketIOServer) {
+    public SocketHandler(SocketIOServer socketIOServer,MessageRepository messageRepository,UserRepository userRepository) {
         this.socketIOServer = socketIOServer;
+        this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -68,12 +69,6 @@ public class SocketHandler {
     public void onConnect(SocketIOClient client) {
         if (client != null) {
             logger.info(String.valueOf(client.getHandshakeData().getUrlParams()));
-//            String imei = client.getHandshakeData().getSingleUrlParam("imei");
-//            String applicationId = client.getHandshakeData().getSingleUrlParam("appid");
-//            logger.info("连接成功, applicationId=" + applicationId + ", imei=" + imei +
-//                    ", sessionId=" + client.getSessionId().toString());
-//            client.joinRoom(applicationId);
-            // 更新POS监控状态为在线
         } else {
             logger.error("客户端为空");
         }
@@ -135,12 +130,61 @@ public class SocketHandler {
      */
     @OnEvent("join")
     public void join(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) throws UnsupportedEncodingException {
-//        LinkedHashMap jsonObject = (LinkedHashMap)messageDto;
-        String encode = EncodeUtil.getEncoding(messageDto.toString());
-        String objStr = EncodeUtil.toUTF8(messageDto.toString());
-//        迷惑
-        String utf8 = new String (objStr.getBytes ( "ISO8859-1" ), encode );
-        logger.info(utf8);
+        //            String imei = client.getHandshakeData().getSingleUrlParam("imei");
+//            String applicationId = client.getHandshakeData().getSingleUrlParam("appid");
+//            logger.info("连接成功, applicationId=" + applicationId + ", imei=" + imei +
+//                    ", sessionId=" + client.getSessionId().toString());
+//            client.joinRoom(applicationId);
+        // 更新POS监控状态为在线
+        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        String conversationId = EncodeUtil.toUTF8(itemJSONObj.getString("conversationId"));
+        logger.info(name+" 加入连接，对话id："+conversationId);
+        if(!clientMap.containsKey(name))
+            clientMap.put(name,socketIOClient.getSessionId());
+        socketIOClient.set("name",name);
+        socketIOClient.joinRoom(conversationId);
+    }
+
+    /*
+        socket.on('mes', (val) => { // 聊天消息
+        apiList.saveMessage(val);
+        console.log('OnlineUser', val.roomid);
+        socket.to(val.roomid).emit('mes', val);
+    });
+    第一个mes是server监听，第二个是client监听（即写在了前端代码）
+     */
+    @OnEvent("mes")
+    public void mes(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) throws UnsupportedEncodingException {
+        /*
+        mes
+        {
+            name: this.user.name, //发信人用户名
+            mes: this.message, //消息，string类型
+            time: utils.formatTime(new Date()),//发信时间
+            avatar: this.user.photo,//发信人头像
+            nickname: this.user.nickname,//发信人昵称
+            read: [this.user.id],//读过的人的id列表，发信时只有发信人读过
+            conversationId: this.currSation.id,//会话id
+            style: 'mess',//四种类型：'mess'/'emoji'/'img'/file
+            userM: this.user.id //发信人id
+        }
+
+         */
+        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
+        List<Integer> readList = (List<Integer>) itemJSONObj.get("read");
+        List<User> readUserList = new ArrayList<>();
+        for(Integer eachId:readList){
+            readUserList.add(userRepository.getOne(eachId));
+        }
+        Long time = (Long) itemJSONObj.get("time");
+        String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
+        String messageType = itemJSONObj.getString("style");
+        Message messageObj = new Message(userName,conversationId,readUserList,time,message,messageType);
+        messageRepository.save(messageObj);
+        
     }
 }
 

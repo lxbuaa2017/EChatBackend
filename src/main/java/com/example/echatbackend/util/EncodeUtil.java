@@ -16,15 +16,16 @@ public class EncodeUtil {
         return null;
     }
     public static String toUTF8(String str) throws UnsupportedEncodingException {
-        String encode = getEncoding(str);
-        switch (encode){
-            case "ISO-8859-1":
-                String utf8 = new String (str.getBytes ( "ISO8859-1" ), "utf-8" );
-                return utf8;
-            case  "UTF-8":
-                return str;
-            default:
-                return str;
-        }
+        return new String (str.toString().getBytes ( "ISO8859-1" ), "UTF-8" );
+//        String encode = getEncoding(str);
+//        switch (encode){
+//            case "ISO-8859-1":
+//                String utf8 = new String (str.getBytes ( "ISO8859-1" ), "utf-8" );
+//                return utf8;
+//            case  "UTF-8":
+//                return str;
+//            default:
+//                return str;
+//        }
     }
 }
