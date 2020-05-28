@@ -1,12 +1,14 @@
 package com.example.echatbackend.entity;
 
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -29,7 +31,8 @@ public class Message {
     private List<User> readList;
 
     @CreatedDate
-    private Long time;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date time;
 
     private String message;
 
@@ -42,12 +45,10 @@ public class Message {
     public Message() {
     }
 
-    public Message(String userName, Integer conversationId, List<User> readList,
-                   Long time, String message, String messageType) {
+    public Message(String userName, Integer conversationId, List<User> readList, String message, String messageType) {
         this.userName=userName;
         this.conversationId=conversationId;
         this.readList=readList;
-        this.time=time;
         this.message=message;
         this.messageType=messageType;
     }

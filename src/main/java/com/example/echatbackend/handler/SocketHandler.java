@@ -136,6 +136,9 @@ public class SocketHandler {
 //                    ", sessionId=" + client.getSessionId().toString());
 //            client.joinRoom(applicationId);
         // 更新POS监控状态为在线
+        /*
+        io.in(val.roomid).emit('joined', OnlineUser);
+         */
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
         String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
         String conversationId = EncodeUtil.toUTF8(itemJSONObj.getString("conversationId"));
@@ -144,6 +147,7 @@ public class SocketHandler {
             clientMap.put(name,socketIOClient.getSessionId());
         socketIOClient.set("name",name);
         socketIOClient.joinRoom(conversationId);
+        socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("joined",clientMap);
     }
 
     /*
@@ -164,7 +168,7 @@ public class SocketHandler {
             time: utils.formatTime(new Date()),//发信时间
             avatar: this.user.photo,//发信人头像
             nickname: this.user.nickname,//发信人昵称
-            read: [this.user.id],//读过的人的id列表，发信时只有发信人读过
+            read: [this.user.name],//读过的人的姓名列表（不是id），发信时只有发信人读过
             conversationId: this.currSation.id,//会话id
             style: 'mess',//四种类型：'mess'/'emoji'/'img'/file
             userM: this.user.id //发信人id
@@ -174,15 +178,16 @@ public class SocketHandler {
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
         String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
         Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
-        List<Integer> readList = (List<Integer>) itemJSONObj.get("read");
+        List<String> readList = (List<String>) itemJSONObj.get("read");
         List<User> readUserList = new ArrayList<>();
-        for(Integer eachId:readList){
-            readUserList.add(userRepository.getOne(eachId));
+        for(String name:readList){
+            readUserList.add(userRepository.findByUserName(name));
         }
-        Long time = (Long) itemJSONObj.get("time");
+//        Long time = (Long) itemJSONObj.get("time");
         String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
         String messageType = itemJSONObj.getString("style");
-        Message messageObj = new Message(userName,conversationId,readUserList,time,message,messageType);
+        Message messageObj = new Message(userName,conversationId,readUserList,message,messageType);
+        logger.info(messageObj.toString());
         messageRepository.save(messageObj);
         socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("mes",messageDto);
     }
