@@ -60,7 +60,6 @@ public class SocketHandler {
     /**
      * 当客户端发起连接时调用
      *
-     * @param socketIOClient
      * @return void
 
      */
@@ -109,6 +108,7 @@ public class SocketHandler {
             clientMap.forEach((key, value) -> {
                 if (value != null) {
                     socketIOServer.getClient(value).sendEvent("receiveMsg", messageDto);
+
                 }
             });
         }
@@ -184,7 +184,7 @@ public class SocketHandler {
         String messageType = itemJSONObj.getString("style");
         Message messageObj = new Message(userName,conversationId,readUserList,time,message,messageType);
         messageRepository.save(messageObj);
-        
+        socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("mes",messageDto);
     }
 }
 
