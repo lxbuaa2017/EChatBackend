@@ -41,7 +41,7 @@ public class MessageController extends BaseController {
         if (conversationId == null || offset == null || limit == null) {
             return requestFail(-1, "参数错误");
         }
-        List<Message> messageList = messageService.getMoreMessage(conversationId, offset - 1, limit);
+        List<Message> messageList = messageService.getMoreMessage(conversationId, offset -1, limit,-1);
         JSONObject response = new JSONObject();
         response.put("data", messageList.stream().map(Message::show).toArray(JSONObject[]::new));
         return requestSuccess(response);

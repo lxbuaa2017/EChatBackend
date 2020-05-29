@@ -151,7 +151,7 @@ public class UserController extends BaseController {
             if (friend == null) {
                 return requestFail(-1, "用户不存在");
             }
-            conversation = conversationService.addConversation(friend);
+            conversation = conversationService.addConversation("friend");
             user.getConversationList().add(conversation);
             return requestSuccess();
         } else if (type.equals("group")) {
@@ -159,7 +159,7 @@ public class UserController extends BaseController {
             if (group == null) {
                 return requestFail(-1, "群组不存在");
             }
-            conversation = conversationService.addConversation(group);
+            conversation = conversationService.addConversation("group");
             user.getConversationList().add(conversation);
             return requestSuccess();
         } else {

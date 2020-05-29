@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Getter
@@ -13,12 +14,8 @@ public class Conversation {
     protected Integer id;
 
     @Setter
-    @OneToOne
-    private User user;
-
-    @Setter
-    @OneToOne
-    private Group group;
+    @OneToMany
+    private List<User> users;
 
     @Setter
     private String type;  // group friend
