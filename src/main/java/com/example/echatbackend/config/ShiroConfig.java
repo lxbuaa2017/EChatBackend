@@ -48,7 +48,11 @@ public class ShiroConfig {
 
         Map<String, String> filterMap = new LinkedHashMap<>();
         // 两个url规则都可以匹配同一个url，只执行第一个
-        filterMap.put("/api/**", "oauth2");
+        filterMap.put("/expre/**", "oauth2");
+        filterMap.put("/mes/**", "oauth2");
+        filterMap.put("/friend/**", "oauth2");
+        filterMap.put("/group/**", "oauth2");
+        filterMap.put("/user/**", "oauth2");
         filterMap.put("/**", "anon");
         shiroFilter.setFilterChainDefinitionMap(filterMap);
 

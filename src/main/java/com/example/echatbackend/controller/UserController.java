@@ -38,7 +38,7 @@ public class UserController extends BaseController {
         this.emailCaptchaService = emailCaptchaService;
     }
 
-    @PostMapping("/user/login")
+    @PostMapping("/login")
     public ResponseEntity<Object> login(@NotNull @RequestBody JSONObject request) {
         String name = request.getString("name");
         String password = request.getString("password");
@@ -64,7 +64,7 @@ public class UserController extends BaseController {
         return requestSuccess(response);
     }
 
-    @GetMapping("/user/sendEmail")
+    @GetMapping("/sendEmail")
     public ResponseEntity<Object> sendEmail(String email) {
         if (email == null) {
             return new ResponseEntity<>("email", HttpStatus.BAD_REQUEST);
@@ -77,7 +77,7 @@ public class UserController extends BaseController {
         return requestSuccess(0);
     }
 
-    @PostMapping("/user/register")
+    @PostMapping("/register")
     public ResponseEntity<Object> register(@NotNull @RequestBody JSONObject request) {
         String name = request.getString("name");
         String password = request.getString("password");
