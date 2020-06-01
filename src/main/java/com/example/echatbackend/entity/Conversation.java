@@ -20,4 +20,6 @@ public class Conversation {
     @Setter
     private String type;  // group friend
 
+    @OneToOne
+    private Group group;
 }
