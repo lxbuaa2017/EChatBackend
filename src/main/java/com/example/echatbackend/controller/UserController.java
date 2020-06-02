@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.ArrayList;
 import java.util.List;
 
 @CrossOrigin
@@ -197,21 +196,21 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/user/getUserInfo")
-    public ResponseEntity<Object> getUserInfo(){
-        User currentUser=tokenService.getCurrentUser();
-        JSONObject userInfo=new JSONObject();
-        userInfo.put("name",currentUser.getUserName());
-        userInfo.put("avatar",currentUser.getAvatar());
-        userInfo.put("wallpaper",currentUser.getWallpaper());
-        userInfo.put("nickname",currentUser.getNickname());
-        userInfo.put("signature",currentUser.getSignature());
-        userInfo.put("gender",currentUser.getGender());
-        userInfo.put("id",currentUser.getId());
-        userInfo.put("bgOpa",currentUser.getBgOpa());
-
-        JSONObject result=new JSONObject();
-        result.put("code",0);
-        result.put("data",userInfo);
+    public ResponseEntity<Object> getUserInfo() {
+        User currentUser = tokenService.getCurrentUser();
+        JSONObject userInfo = new JSONObject();
+        userInfo.put("name", currentUser.getUserName());
+        userInfo.put("avatar", currentUser.getAvatar());
+        userInfo.put("wallpaper", currentUser.getWallpaper());
+        userInfo.put("nickname", currentUser.getNickname());
+        userInfo.put("signature", currentUser.getSignature());
+        userInfo.put("gender", currentUser.getGender());
+        userInfo.put("id", currentUser.getId());
+        userInfo.put("bgOpa", currentUser.getBgOpa());
+        userInfo.put("conversationsList", currentUser.getConversationList().stream().map(conversation -> conversation.show(currentUser.getId())).toArray(JSONObject[]::new));
+        JSONObject result = new JSONObject();
+        result.put("code", 0);
+        result.put("data", userInfo);
         return requestSuccess(result);
     }
 
