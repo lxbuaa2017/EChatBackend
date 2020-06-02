@@ -1,4 +1,4 @@
-package com.example.echatbackend.controller.reference;
+/*package com.example.echatbackend.controller.reference;
 
 import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.controller.BaseController;
@@ -139,4 +139,4 @@ public class OldUserController extends BaseController {
         response.put("userName", user.getUserName());
         return requestSuccess(response);
     }
-}
+}*/

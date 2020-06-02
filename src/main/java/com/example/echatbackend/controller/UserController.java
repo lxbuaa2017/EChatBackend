@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 
 @CrossOrigin
@@ -206,7 +207,6 @@ public class UserController extends BaseController {
         userInfo.put("signature",currentUser.getSignature());
         userInfo.put("gender",currentUser.getGender());
         userInfo.put("id",currentUser.getId());
-        userInfo.put("conversationsList",currentUser.getConversationList());
         userInfo.put("bgOpa",currentUser.getBgOpa());
 
         JSONObject result=new JSONObject();
@@ -220,15 +220,15 @@ public class UserController extends BaseController {
         User currentUser = tokenService.getCurrentUser();
         String type = request.getString("type");
         String content = request.getString("content");
-        if (type == "nickname") {
+        if (type.equals("nickname")) {
             currentUser.setNickname(content);
-        } else if (type == "signature") {
+        } else if (type.equals("signature")) {
             currentUser.setSignature(content);
-        } else if (type == "avatar") {
+        } else if (type.equals("avatar")) {
             currentUser.setAvatar(content);
-        } else if (type == "wallpaper") {
+        } else if (type.equals("wallpaper")) {
             currentUser.setWallpaper(content);
-        } else if (type == "chatColor") {
+        } else if (type.equals("chatColor")) {
             currentUser.setChatColor(content);
         } else {
             return requestFail(-1, "请指定正确的字段名");
