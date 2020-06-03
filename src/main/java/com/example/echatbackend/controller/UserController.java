@@ -196,22 +196,21 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/user/getUserInfo")
-    public ResponseEntity<Object> getUserInfo(){
-        User currentUser=tokenService.getCurrentUser();
-        JSONObject userInfo=new JSONObject();
-        userInfo.put("name",currentUser.getUserName());
-        userInfo.put("avatar",currentUser.getAvatar());
-        userInfo.put("wallpaper",currentUser.getWallpaper());
-        userInfo.put("nickname",currentUser.getNickname());
-        userInfo.put("signature",currentUser.getSignature());
-        userInfo.put("gender",currentUser.getGender());
-        userInfo.put("id",currentUser.getId());
-        userInfo.put("conversationsList",currentUser.getConversationList());
-        userInfo.put("bgOpa",currentUser.getBgOpa());
-
-        JSONObject result=new JSONObject();
-        result.put("code",0);
-        result.put("data",userInfo);
+    public ResponseEntity<Object> getUserInfo() {
+        User currentUser = tokenService.getCurrentUser();
+        JSONObject userInfo = new JSONObject();
+        userInfo.put("name", currentUser.getUserName());
+        userInfo.put("avatar", currentUser.getAvatar());
+        userInfo.put("wallpaper", currentUser.getWallpaper());
+        userInfo.put("nickname", currentUser.getNickname());
+        userInfo.put("signature", currentUser.getSignature());
+        userInfo.put("gender", currentUser.getGender());
+        userInfo.put("id", currentUser.getId());
+        userInfo.put("bgOpa", currentUser.getBgOpa());
+        userInfo.put("conversationsList", currentUser.getConversationList().stream().map(conversation -> conversation.show(currentUser.getId())).toArray(JSONObject[]::new));
+        JSONObject result = new JSONObject();
+        result.put("code", 0);
+        result.put("data", userInfo);
         return requestSuccess(result);
     }
 
@@ -220,15 +219,15 @@ public class UserController extends BaseController {
         User currentUser = tokenService.getCurrentUser();
         String type = request.getString("type");
         String content = request.getString("content");
-        if (type == "nickname") {
+        if (type.equals("nickname")) {
             currentUser.setNickname(content);
-        } else if (type == "signature") {
+        } else if (type.equals("signature")) {
             currentUser.setSignature(content);
-        } else if (type == "avatar") {
+        } else if (type.equals("avatar")) {
             currentUser.setAvatar(content);
-        } else if (type == "wallpaper") {
+        } else if (type.equals("wallpaper")) {
             currentUser.setWallpaper(content);
-        } else if (type == "chatColor") {
+        } else if (type.equals("chatColor")) {
             currentUser.setChatColor(content);
         } else {
             return requestFail(-1, "请指定正确的字段名");

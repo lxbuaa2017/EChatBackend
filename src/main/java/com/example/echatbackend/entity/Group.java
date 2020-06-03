@@ -8,6 +8,7 @@ import javax.persistence.*;
 
 @Entity
 @Getter
+@Table(name = "tb_group")
 public class Group {
 
     @Column(nullable = false)
@@ -28,6 +29,7 @@ public class Group {
 
     @Column(nullable = false, unique = true)
     private Integer code;  // 群账号
+
     @OneToOne
     @Setter
     private User user;  // 群主账号

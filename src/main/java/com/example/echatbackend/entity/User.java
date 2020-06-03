@@ -12,11 +12,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
 @Getter
+@Table(name = "tb_user")
 @EntityListeners(AuditingEntityListener.class)
 public class User {
     @Id
@@ -74,7 +74,7 @@ public class User {
     private String salt;
 
     @Setter
-    @OneToMany(cascade = CascadeType.REMOVE)
+    @ManyToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     private List<Conversation> conversationList = new ArrayList<>();
 
     private static String shaSaltSha(String password, String salt) {
