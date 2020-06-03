@@ -219,18 +219,24 @@ public class UserController extends BaseController {
         User currentUser = tokenService.getCurrentUser();
         String type = request.getString("type");
         String content = request.getString("content");
-        if (type.equals("nickname")) {
-            currentUser.setNickname(content);
-        } else if (type.equals("signature")) {
-            currentUser.setSignature(content);
-        } else if (type.equals("avatar")) {
-            currentUser.setAvatar(content);
-        } else if (type.equals("wallpaper")) {
-            currentUser.setWallpaper(content);
-        } else if (type.equals("chatColor")) {
-            currentUser.setChatColor(content);
-        } else {
-            return requestFail(-1, "请指定正确的字段名");
+        switch (type) {
+            case "nickname":
+                currentUser.setNickname(content);
+                break;
+            case "signature":
+                currentUser.setSignature(content);
+                break;
+            case "avatar":
+                currentUser.setAvatar(content);
+                break;
+            case "wallpaper":
+                currentUser.setWallpaper(content);
+                break;
+            case "chatColor":
+                currentUser.setChatColor(content);
+                break;
+            default:
+                return requestFail(-1, "请指定正确的字段名");
         }
         userService.save(currentUser);
         return requestSuccess(0);
