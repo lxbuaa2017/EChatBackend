@@ -58,4 +58,17 @@ public class GroupService extends BaseService<Group, Integer, GroupRepository> {
         List<GroupUser> groupUsers = groupUserRepository.findAllByUser(user);
         return groupUsers.stream().map(GroupUser::getGroup).toArray(Group[]::new);
     }
+
+    public boolean isUserInGroup(Integer groupId, Integer userId) {
+        User user = userRepository.findById(userId).get();
+        List<GroupUser> groupUsers = groupUserRepository.findAllByUser(user);
+        Boolean judge = false;
+        for (GroupUser item : groupUsers) {
+            if (item.getGroup().getId() == groupId) {
+                judge = true;
+                break;
+            }
+        }
+        return judge;
+    }
 }

@@ -5,14 +5,19 @@ import com.alibaba.fastjson.JSONObject;
 import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.corundumstudio.socketio.annotation.*;
+import com.corundumstudio.socketio.annotation.OnConnect;
+import com.corundumstudio.socketio.annotation.OnDisconnect;
+import com.corundumstudio.socketio.annotation.OnEvent;
 import com.example.echatbackend.dao.ConversationRepository;
+import com.example.echatbackend.dao.GroupUserRepository;
 import com.example.echatbackend.dao.MessageRepository;
 import com.example.echatbackend.dao.UserRepository;
-import com.example.echatbackend.entity.Conversation;
+import com.example.echatbackend.entity.Group;
+import com.example.echatbackend.entity.GroupUser;
 import com.example.echatbackend.entity.Message;
 import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.ConversationService;
+import com.example.echatbackend.service.GroupService;
 import com.example.echatbackend.service.MessageService;
 import com.example.echatbackend.util.EncodeUtil;
 import lombok.Data;
@@ -23,10 +28,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.persistence.criteria.CriteriaBuilder;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -55,25 +61,31 @@ public class SocketHandler {
     private ConversationService conversationService;
 
     private MessageService messageService;
+
+    private final GroupService groupService;
     /**
      * socketIOServer
      */
     private final SocketIOServer socketIOServer;
+    private GroupUserRepository groupUserRepository;
 
     public static Map<String, UUID> getClientMap() {
         return clientMap;
     }
-//规范化的话还是把repository都写到service去
+
+    //规范化的话还是把repository都写到service去
     @Autowired
     public SocketHandler(SocketIOServer socketIOServer, MessageRepository messageRepository, UserRepository userRepository,
                          ConversationRepository conversationRepository, ConversationService conversationService,
-                         MessageService messageService) {
+                         MessageService messageService, GroupService groupService, GroupUserRepository groupUserRepository) {
         this.socketIOServer = socketIOServer;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.conversationRepository = conversationRepository;
         this.conversationService = conversationService;
         this.messageService = messageService;
+        this.groupService = groupService;
+        this.groupUserRepository = groupUserRepository;
     }
 
     /**
@@ -139,7 +151,7 @@ public class SocketHandler {
         socketIOClient.set("name",name);
         socketIOClient.joinRoom(conversationId);
         Map<String,UUID> onlineUsers = conversationService.getOnlineUser(Integer.valueOf(conversationId));
-        socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("joined",onlineUsers);
+        socketIOServer.getRoomOperations(conversationId).sendEvent("joined", onlineUsers);
     }
 
     /*
@@ -366,36 +378,59 @@ public class SocketHandler {
 
 
  */
-    @OnEvent("agreeValidate")
-    public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto){
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
-        String state = itemJSONObj.getString("state");
-        if(state.equals("group")){
-            /*
-            todo
-             */
+@OnEvent("agreeValidate")
+public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
+    JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+    String state = itemJSONObj.getString("state");
+
+    if (state.equals("group")) {
+        Integer userId = Integer.valueOf(itemJSONObj.getString("userM"));
+        Integer groupId = Integer.valueOf(itemJSONObj.getString("groupId"));
+        if (groupService.isUserInGroup(groupId, userId)) {
+            logger.info("该用户已在群中");
+        } else {
+            Group group = groupService.findGroupById(groupId);
+            User user = userRepository.findById(userId).get();
+            GroupUser groupUser = new GroupUser(group, user, false, false, group.getDescription());
+            groupUserRepository.save(groupUser);
+            logger.info("已经成功加入群");
+            //将申请信息设为已读
+
+            Integer userM = Integer.valueOf(itemJSONObj.getString("userM"));
+            String userName = userRepository.findById(userM).get().getUserName();
+            Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
+            List<String> readList = (List<String>) itemJSONObj.get("read");
+            List<User> readUserList = new ArrayList<>();
+            for (String name : readList) {
+                readUserList.add(userRepository.findByUserName(name));
+            }
+
+            String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
+            String messageType = itemJSONObj.getString("style");
+            Message messageObj = new Message(userName, conversationId, readUserList, message, messageType);
+            logger.info(messageObj.toString());
+            messageRepository.save(messageObj);
         }
+
+
+    }
         else if(state.equals("friend")){
-            /*
-            todo
-             */
+
         }
     }
 
     @OnEvent("setReadStatus")
-    public void setReadStatus(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) {
+    public void setReadStatus(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
-        /*
-        todo
-         */
+        String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
+
     }
 
     @OnEvent("sendValidate")
     public void sendValidate(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) {
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
-        /*
-        todo
-         */
+
     }
 
     @OnEvent("disconnect")

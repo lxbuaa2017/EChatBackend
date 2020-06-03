@@ -26,4 +26,15 @@ public class GroupUser {
 
     @Setter
     private String card;  // 群简介
+
+    public GroupUser() {
+    }
+
+    public GroupUser(Group group, User user, Boolean isManager, Boolean isHolder, String card) {
+        this.group = group;
+        this.user = user;
+        this.isHolder = isHolder;
+        this.isManager = isManager;
+        this.card = card;
+    }
 }
