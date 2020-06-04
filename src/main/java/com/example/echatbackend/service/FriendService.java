@@ -41,9 +41,27 @@ public class FriendService {
             return null;
     }
 
-    public boolean checkFriend(int userMid, int userYid) {
-        User userM = userRepository.findById(userMid).get();
+    public boolean checkFriend(int userYid, int userMid) {
         User userY = userRepository.findById(userYid).get();
-        return friendRepository.findByUserMAndUserY(userM, userY) != null || friendRepository.findByUserMAndUserY(userY, userM) != null;
+        User userM = userRepository.findById(userMid).get();
+        return friendRepository.findByUserMAndUserY(userY, userM) != null;
+    }
+
+    //fail: -1  success: 0
+    public int deleteFriend(User thisUser, int friendId) {
+        User friend = userRepository.findById(friendId).get();
+        if (friend == null)
+            return -1;
+        Friend friendRelationship;
+        if (thisUser.getId() < friendId)
+            friendRelationship = friendRepository.findByUserMAndUserY(thisUser, friend);
+        else
+            friendRelationship = friendRepository.findByUserMAndUserY(friend, thisUser);
+        if (friendRelationship == null)
+            return -1;
+        else {
+            friendRepository.delete(friendRelationship);
+            return 0;
+        }
     }
 }

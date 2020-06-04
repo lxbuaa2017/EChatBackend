@@ -1,57 +1,65 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.FriendService;
+import com.example.echatbackend.service.TokenService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin
 @RestController
 public class FriendController extends BaseController {
 
     private final FriendService friendService;
+    private final TokenService tokenService;
 
     @Autowired
-    public FriendController(FriendService friendService) {
+    public FriendController(FriendService friendService, TokenService tokenService) {
         this.friendService = friendService;
+        this.tokenService = tokenService;
     }
 
     // 查找我的好友
-    @PostMapping("/friend/findMyfriends")
-    public ResponseEntity<Object> findMyfriends(@NotNull @RequestBody JSONObject request) {
-        /*
-        [{
-            createDate: string, // 加好友时间
-            nickname: string, //昵称
-            photo: string, //头像
-            signature: string, //签名
-            id: string, //id
-            roomid: string //房间id
-        }]
-         */
-        int userId = Integer.parseInt(request.getString("userId"));
-        return ResponseEntity.ok(friendService.findFriend(userId));
-
+    @GetMapping("/friend/getMyfriend")
+    public ResponseEntity<Object> getMyfriends(@NotNull @RequestBody JSONObject request) {
+        User user = tokenService.getCurrentUser();
+        return ResponseEntity.ok(friendService.findFriend(user.getId()));
     }
 
     // 验证是否已加为好友
-    @PostMapping("/friend/checkMyfriends")
-    public ResponseEntity<Object> checkMyfriends(@NotNull @RequestBody JSONObject request) {
-        /*
-        {
-            isMyfriends: bool
+    @GetMapping("/friend/checkMyfriend")
+    public ResponseEntity<Object> checkMyfriend(@NotNull @RequestBody JSONObject request) {
+        User user = tokenService.getCurrentUser();
+        int myId = user.getId();
+        int yourId = Integer.parseInt(request.getString("userid"));
+        if (myId < yourId) {
+            if (friendService.checkFriend(myId, yourId))
+                return ResponseEntity.ok(true);
+            else
+                return ResponseEntity.ok(false);
         }
-         */
-        int userMid = Integer.parseInt(request.getString("userM"));
-        int userYid = Integer.parseInt(request.getString("userY"));
-        if (friendService.checkFriend(userMid, userYid))
-            return ResponseEntity.ok(true);
+        else {
+            if (friendService.checkFriend(yourId, myId))
+                return ResponseEntity.ok(true);
+            else
+                return ResponseEntity.ok(false);
+        }
+    }
+
+    //删除好友
+    @DeleteMapping("/friend/deleteMyfriend")
+    public ResponseEntity<Object> deleteMyfriend(@NotNull @RequestBody JSONObject request) {
+        User user = tokenService.getCurrentUser();
+        int friendId = Integer.parseInt(request.getString("userid"));
+        int res = friendService.deleteFriend(user, friendId);
+        if (res == -1)
+            return requestFail(-1, "fail to delete a friend");
         else
-            return ResponseEntity.ok(false);
+            return requestSuccess(0);
     }
 }
+
+
