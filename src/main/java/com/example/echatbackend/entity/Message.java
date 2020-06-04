@@ -2,7 +2,6 @@ package com.example.echatbackend.entity;
 
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -15,13 +14,13 @@ import java.util.List;
 @Data
 @EntityListeners(AuditingEntityListener.class)
 public class Message {
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     protected Integer id;
 
+    @OneToOne
+    private User userM;  // 为保证同步更新，消息发出方的信息从User表内获取
 
-    private String userName;  // 为保证同步更新，消息发出方的信息从User表内获取
 
 
     @Column(nullable = false)
@@ -37,20 +36,30 @@ public class Message {
     private String message;
 
 
-    private String messageType;  // mess 常规消息 emoji 表情包 img 图片 file 文件 ...
+    private String style;  // mess 常规消息 emoji 表情包 img 图片 file 文件 ...
 
-//    private Integer chatType;  // 0单聊 1群聊
+    private String state; //group friend
 
+    private String type; // validate
+
+    private String status;// 0 未操作 1 同意 2 拒绝
+
+
+    @OneToOne
+    private Group group;
+
+    @OneToOne
+    private User userY;
 
     public Message() {
     }
 
-    public Message(String userName, Integer conversationId, List<User> readList, String message, String messageType) {
-        this.userName=userName;
+    public Message(User userM, Integer conversationId, List<User> readList, String message, String style) {
+        this.userM = userM;
         this.conversationId=conversationId;
         this.readList=readList;
         this.message=message;
-        this.messageType=messageType;
+        this.style = style;
     }
 
     public JSONObject show() {
@@ -58,9 +67,9 @@ public class Message {
         jsonObject.put("id", id);
         jsonObject.put("mes", message);
         jsonObject.put("time", time);
-        jsonObject.put("style", messageType);
+        jsonObject.put("style", style);
         jsonObject.put("read", readList);
-        jsonObject.put("userName", userName);
+        jsonObject.put("userM", userM);
 //        jsonObject.put("userId", user.id);
 //        jsonObject.put("nickname", user.getUserName());
 //        jsonObject.put("avatar", user.getAvatar());

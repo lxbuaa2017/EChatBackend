@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.CaptchaService;
 import com.example.echatbackend.service.EmailCaptchaService;
-import com.example.echatbackend.service.reference.SecurityService;
+import com.example.echatbackend.service.SecurityService;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;

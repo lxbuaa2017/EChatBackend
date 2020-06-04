@@ -1,14 +1,17 @@
 package com.example.echatbackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
-@Getter
+@Data
 @EntityListeners(AuditingEntityListener.class)
 public class Friend {
     @Id
@@ -22,11 +25,14 @@ public class Friend {
     private User userM;//userM代表userid较大的
 
     @CreatedDate
-    @Setter
-    private Long createDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date createDate;
 
-    public String getCreateDate() {
-        return createDate.toString();
+    public Friend() {
     }
 
+    public Friend(User userY,User userM) {
+        this.userY=userY;
+        this.userM=userM;
+    }
 }

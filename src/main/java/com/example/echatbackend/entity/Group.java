@@ -8,7 +8,7 @@ import javax.persistence.*;
 
 @Entity
 @Getter
-@Table(name = "tb_group")
+//@Table(name = "tb_group")
 public class Group {
 
     @Column(nullable = false)

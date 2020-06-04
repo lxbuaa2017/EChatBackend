@@ -12,11 +12,9 @@ import com.example.echatbackend.dao.ConversationRepository;
 import com.example.echatbackend.dao.GroupUserRepository;
 import com.example.echatbackend.dao.MessageRepository;
 import com.example.echatbackend.dao.UserRepository;
-import com.example.echatbackend.entity.Group;
-import com.example.echatbackend.entity.GroupUser;
-import com.example.echatbackend.entity.Message;
-import com.example.echatbackend.entity.User;
+import com.example.echatbackend.entity.*;
 import com.example.echatbackend.service.ConversationService;
+import com.example.echatbackend.service.FriendService;
 import com.example.echatbackend.service.GroupService;
 import com.example.echatbackend.service.MessageService;
 import com.example.echatbackend.util.EncodeUtil;
@@ -41,6 +39,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 @Data
+/*
+
+这个handler可以算作表现层，这里本应只依赖业务层(即service)，但是目前持久层和业务层混在一起了，等一个有缘人把repository都干掉，全部换成service（逃
+
+ */
 public class SocketHandler {
 
     /**
@@ -63,6 +66,8 @@ public class SocketHandler {
     private MessageService messageService;
 
     private final GroupService groupService;
+
+    private FriendService friendService;
     /**
      * socketIOServer
      */
@@ -223,7 +228,8 @@ public class SocketHandler {
 //        Long time = (Long) itemJSONObj.get("time");
         String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
         String messageType = itemJSONObj.getString("style");
-        Message messageObj = new Message(userName,conversationId,readUserList,message,messageType);
+        User userM = userRepository.findByUserName(userName);
+        Message messageObj = new Message(userM,conversationId,readUserList,message,messageType);
         logger.info(messageObj.toString());
         messageRepository.save(messageObj);
         socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("mes",messageDto);
@@ -277,147 +283,114 @@ public class SocketHandler {
         socketIOClient.sendEvent("getSystemMessages",res);
     }
 /*
-    socket.on('agreeValidate', (val) => { // 同意好友或加群申请
-        if (val.state === 'group') { // 群聊验证
-            apiList.InsertGroupUsers(val, r => {
-                if (r.code === -1) {
-                    console.log('加入群聊失败');
-                } else if (r.code === -2) {
-                    console.log('更新群成员数量失败');
-                } else if (r.code === -3) {
-                    console.log('群成员已存在');
-                } else if (r.code === 0) {
-                    let pr = {
-                        status: '1',
-                        userM: val['userM']
-                    };
-                    apiList.setMessageStatus(pr);
-                    // 通知申请人验证已同意
-                    let value = {
-                        name: '',
-                        mes: val.userYname + '同意你加入' + val.groupName + '!',
-                        time: utils.formatTime(new Date()),
-                        avatar: val.userYphoto,
-                        nickname: val.userYname,
-                        groupName: val.groupName,
-                        groupId: val.groupId,
-                        groupPhoto: val.groupPhoto,
-                        read: [],
-                        status: '1', // 同意
-                        state: 'group',
-                        type: 'info',
-                        roomid: val.userM + '-' + val.roomid.split('-')[1]
-                    };
-                    apiList.saveMessage(value); // 保存通知消息
-                    let params = {
-                        name: val.groupName,
-                        photo: val.groupPhoto,
-                        id: val.groupId,
-                        type: 'group'
-                    };
-                    apiList.ServeraddConversitionList(val.name, params, () => {
-                        socket.to(value.roomid).emit('takeValidate', value);
-                        // 通知群聊
-                        let org = {
-                            type: 'org',
-                            nickname: val.nickname,
-                            time: utils.formatTime(new Date()),
-                            roomid: val.groupId
-                        };
-                        apiList.saveMessage(org); // 保存通知消息
-                        socket.to(org.roomid).emit('org', org);
-                    }); // 添加到申请人会话列表
-                }
-            });
-        } else if (val.state === 'friend') { // 写入好友表
-            apiList.addFriend(val, r => {
-                if (r.code === 0) {
-                    let pr = {
-                        status: '1',
-                        userM: val['userM']
-                    };
-                    apiList.setMessageStatus(pr);
-                    // 通知申请人验证已同意
-                    let value = {
-                        name: '',
-                        mes: val.userYname + '同意了你的好友请求！',
-                        time: utils.formatTime(new Date()),
-                        avatar: val.userYphoto,
-                        nickname: val.userYname,
-                        read: [],
-                        state: 'friend',
-                        type: 'info',
-                        status: '1', // 同意
-                        roomid: val.userM + '-' + val.roomid.split('-')[1]
-                    };
-                    apiList.saveMessage(value); // 保存通知消息
-                    let userMparams = { // 申请人信息
-                        name: val.nickname,
-                        photo: val.avatar,
-                        id: val.friendRoom,
-                        type: 'friend'
-                    };
-                    let userYparams = { // 好友信息
-                        name: val.userYname,
-                        photo: val.userYphoto,
-                        id: val.friendRoom,
-                        type: 'friend'
-                    };
-                    apiList.ServeraddConversitionList(val.name, userYparams, () => {
-                        apiList.ServeraddConversitionList(val.userYloginName, userMparams, () => {
-                            socket.to(value.roomid).emit('takeValidate', value);
-                            socket.emit('ValidateSuccess', 'ok');
-                        }); // 添加到自己会话列表
-                    }); // 添加到申请人会话列表
-                }else {
-                    console.log('添加好友失败');
-                }
-            });
-        }
-    });
-
+sendValidate（加群申请）
+{
+  name: this.user.name, //发信人用户名
+  mes: this.introduce, //发信人介绍
+  time: utils.formatTime(new Date()), //发信时间
+  avatar: this.user.photo, //发信头像
+  nickname: this.user.nickname, //发信人昵称
+  signature: this.user.signature, //发信人签名
+  groupName: group.groupName, //群名
+  groupId: group.groupId, //群id
+  groupPhoto: group.groupPhoto, //群头像
+  userM: this.user.id, // 申请人id
+  read: [], //已读人id列表
+ conversationId: this.$route.params.id + '-' + this.Vchat.id.split('-')[1],
+  state: 'group',
+  type: 'validate',
+  status: '0'
+}
 
  */
 @OnEvent("agreeValidate")
 public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
     JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
     String state = itemJSONObj.getString("state");
-
+    String name= itemJSONObj.getString("name");
+    Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
     if (state.equals("group")) {
+        String groupName= itemJSONObj.getString("groupName");
         Integer userId = Integer.valueOf(itemJSONObj.getString("userM"));
         Integer groupId = Integer.valueOf(itemJSONObj.getString("groupId"));
         if (groupService.isUserInGroup(groupId, userId)) {
-            logger.info("该用户已在群中");
+            logger.info(name+" 已在群 "+groupId.toString()+" 中");
         } else {
             Group group = groupService.findGroupById(groupId);
             User user = userRepository.findById(userId).get();
             GroupUser groupUser = new GroupUser(group, user, false, false, group.getDescription());
             groupUserRepository.save(groupUser);
-            logger.info("已经成功加入群");
+            logger.info(name+" 已经成功加入群 "+groupId.toString());
             //将申请信息设为已读
+            Message message = messageRepository.findMessageByConversationIdAndUserMName(conversationId,name);
+            message.setStatus("1");
+            messageRepository.save(message);
 
-            Integer userM = Integer.valueOf(itemJSONObj.getString("userM"));
-            String userName = userRepository.findById(userM).get().getUserName();
-            Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
-            List<String> readList = (List<String>) itemJSONObj.get("read");
-            List<User> readUserList = new ArrayList<>();
-            for (String name : readList) {
-                readUserList.add(userRepository.findByUserName(name));
-            }
-
-            String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
-            String messageType = itemJSONObj.getString("style");
-            Message messageObj = new Message(userName, conversationId, readUserList, message, messageType);
-            logger.info(messageObj.toString());
-            messageRepository.save(messageObj);
+            //通知申请人已同意
+            Message agree_message = new Message();
+            agree_message.setMessage("加入"+groupName+"的申请已通过");
+            agree_message.setStatus("1");
+            agree_message.setState("group");
+            agree_message.setType("info");
+            agree_message.setUserM(user);
+            agree_message.setConversationId(conversationId);
+            messageRepository.save(agree_message);
+            Conversation conversation = conversationRepository.getOne(conversationId);
+            List<User> userList = conversation.getUsers();//软复制
+            userList.add(user);
+            conversationRepository.save(conversation);
+            socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("takeValidate",agree_message);
+            //通知群聊有新人加入
+            Message org_message = new Message();
+            org_message.setType("org");
+            org_message.setUserM(user);
+            org_message.setConversationId(conversationId);
+            messageRepository.save(org_message);
+            socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("org",org_message);
         }
-
-
     }
+    /*
+    sendValidate（好友申请）
+{
+    name: this.user.name, //发信人用户名
+    mes: this.introduce, //发信人介绍
+    time: utils.formatTime(new Date()), //发信时间
+    avatar: this.user.photo, //发信人头像
+    nickname: this.user.nickname, //发信人昵称
+    signature: this.user.signature, //发信人签名
+    read: [], //已读人id列表
+    userM: this.user.id, //发信人id
+    userY: this.$route.params.id, //对方的id
+    userYname: friend.userYname, //对方的昵称
+    userYphoto: friend.userYphoto, //对方的照片
+    userYloginName: friend.userYloginName, //对方的登录名
+    friendRoom : this.user.id + '-' + this.$route.params.id, //这次发信的会话id
+    conversationId: this.$route.params.id + '-' + this.Vchat.id.split('-')[1], //这次发信的会话id，上面friendroom颠倒一下
+    state: 'friend',
+    type: 'validate',
+    status: '0'
+}
+
+     */
         else if(state.equals("friend")){
+            //如果已经是好友，就不处理。否则就加入好友列表
+        Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
+        Integer userYId = Integer.valueOf(itemJSONObj.getString("userY"));
+        if(!friendService.checkFriend(userMId,userYId)){
 
         }
+        }
     }
+
+
+    @OnEvent("refuseValidate")
+    public void refuseValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
+        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
+
+    }
+
 
     @OnEvent("setReadStatus")
     public void setReadStatus(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {

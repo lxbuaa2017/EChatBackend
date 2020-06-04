@@ -20,6 +20,7 @@ public class FriendService {
         this.userRepository = userRepository;
     }
 
+
     public JSONObject findFriend(int userId) {
         //1.看看这个人是不是好友
         //2.如果是，去user里面把他找出来
@@ -46,4 +47,12 @@ public class FriendService {
         User userY = userRepository.findById(userYid).get();
         return friendRepository.findByUserMAndUserY(userM, userY) != null || friendRepository.findByUserMAndUserY(userY, userM) != null;
     }
+
+    public void addFriend(int userMid, int userYid) {
+        User userM = userRepository.findById(userMid).get();
+        User userY = userRepository.findById(userYid).get();
+        Friend friend = new Friend(userY,userM);
+        friendRepository.save(friend);
+    }
+
 }
