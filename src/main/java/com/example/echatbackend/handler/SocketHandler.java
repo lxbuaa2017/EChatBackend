@@ -155,7 +155,7 @@ public class SocketHandler {
             clientMap.put(name,socketIOClient.getSessionId());
         socketIOClient.set("name",name);
         socketIOClient.joinRoom(conversationId);
-        Map<String,UUID> onlineUsers = conversationService.getOnlineUser(Integer.valueOf(conversationId));
+        Map<String,UUID> onlineUsers = conversationService.getOnlineUser(conversationId);
         socketIOServer.getRoomOperations(conversationId).sendEvent("joined", onlineUsers);
     }
 
@@ -187,7 +187,7 @@ public class SocketHandler {
         String conversationId = itemJSONObj.getString("conversationId");
         clientMap.remove(name);
         socketIOClient.leaveRoom(conversationId);
-        Map<String,UUID> onlineUsers = conversationService.getOnlineUser(Integer.valueOf(conversationId));
+        Map<String,UUID> onlineUsers = conversationService.getOnlineUser(conversationId);
         socketIOServer.getRoomOperations(conversationId).sendEvent("leaved",onlineUsers);
     }
 
@@ -219,7 +219,7 @@ public class SocketHandler {
          */
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
         String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
-        Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
+        String conversationId = itemJSONObj.getString("conversationId");
         List<String> readList = (List<String>) itemJSONObj.get("read");
         List<User> readUserList = new ArrayList<>();
         for(String name:readList){
@@ -232,7 +232,7 @@ public class SocketHandler {
         Message messageObj = new Message(userM,conversationId,readUserList,message,messageType);
         logger.info(messageObj.toString());
         messageRepository.save(messageObj);
-        socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("mes",messageDto);
+        socketIOServer.getRoomOperations(conversationId).sendEvent("mes",messageDto);
     }
 
     /*
@@ -255,7 +255,7 @@ public class SocketHandler {
     @OnEvent("getHistoryMessages")
     public void getHistoryMessages(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto){
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
-        int conversationId = Integer.parseInt(itemJSONObj.getString("conversationId"));
+        String conversationId = itemJSONObj.getString("conversationId");
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
         List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,1);
@@ -276,7 +276,7 @@ public class SocketHandler {
     @OnEvent("getSystemMessages")
     public void getSystemMessages(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto){
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
-        int conversationId = Integer.parseInt(itemJSONObj.getString("conversationId"));
+        String conversationId = itemJSONObj.getString("conversationId");
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
         List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,-1);
@@ -308,7 +308,7 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
     JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
     String state = itemJSONObj.getString("state");
     String name= itemJSONObj.getString("name");
-    Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
+    String conversationId = itemJSONObj.getString("conversationId");
     if (state.equals("group")) {
         String groupName= itemJSONObj.getString("groupName");
         Integer userId = Integer.valueOf(itemJSONObj.getString("userM"));
@@ -322,7 +322,8 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
             groupUserRepository.save(groupUser);
             logger.info(name+" 已经成功加入群 "+groupId.toString());
             //将申请信息设为已读
-            Message message = messageRepository.findMessageByConversationIdAndUserMName(conversationId,name);
+            User userM = userRepository.findByUserName(name);
+            Message message = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
             message.setStatus("1");
             messageRepository.save(message);
 
@@ -335,18 +336,20 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
             agree_message.setUserM(user);
             agree_message.setConversationId(conversationId);
             messageRepository.save(agree_message);
-            Conversation conversation = conversationRepository.getOne(conversationId);
+            Conversation conversation = conversationRepository.findByConversationId(conversationId);
             List<User> userList = conversation.getUsers();//软复制
             userList.add(user);
             conversationRepository.save(conversation);
-            socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("takeValidate",agree_message);
+            userM.getConversationList().add(conversation);
+            userRepository.save(userM);
+            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",agree_message);
             //通知群聊有新人加入
             Message org_message = new Message();
             org_message.setType("org");
             org_message.setUserM(user);
             org_message.setConversationId(conversationId);
             messageRepository.save(org_message);
-            socketIOServer.getRoomOperations(conversationId.toString()).sendEvent("org",org_message);
+            socketIOServer.getRoomOperations(conversationId).sendEvent("org",org_message);
         }
     }
     /*
@@ -377,9 +380,37 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         Integer userYId = Integer.valueOf(itemJSONObj.getString("userY"));
         if(!friendService.checkFriend(userMId,userYId)){
-
+            friendService.addFriend(userMId,userYId);
         }
-        }
+        //将申请信息设为已读
+        User userM = userRepository.findByUserName(name);
+        User userY = userRepository.getOne(userYId);
+        Message message = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
+        message.setStatus("1");
+        messageRepository.save(message);
+        //通知申请人已同意
+        Message agree_message = new Message();
+        agree_message.setMessage(userY.getUserName()+"的好友申请已通过");
+        agree_message.setStatus("1");
+        agree_message.setState("friend");
+        agree_message.setType("info");
+        agree_message.setUserM(userM);
+        agree_message.setUserY(userY);
+        agree_message.setConversationId(conversationId);
+        messageRepository.save(agree_message);
+        Conversation conversation = new Conversation();
+        conversation.setConversationId(conversationId);
+        conversation.setType("friend");
+        conversation.getUsers().add(userM);
+        conversation.getUsers().add(userY);
+        conversationRepository.save(conversation);
+        userM.getConversationList().add(conversation);
+        userY.getConversationList().add(conversation);
+        userRepository.save(userM);
+        userRepository.save(userY);
+        socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",agree_message);
+        socketIOClient.sendEvent("ValidateSuccess","ok");
+    }
     }
 
 

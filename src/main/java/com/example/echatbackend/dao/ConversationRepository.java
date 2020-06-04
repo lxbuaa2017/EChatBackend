@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface ConversationRepository extends JpaRepository<Conversation, Integer> {
     //List<Integer> findAllByUserContains(User user);
+    Conversation findByConversationId(String conversationId);
 }

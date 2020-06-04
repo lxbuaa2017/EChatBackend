@@ -16,7 +16,7 @@ import java.util.List;
 
 @Entity
 @Getter
-@Table(name = "tb_user")
+//@Table(name = "tb_user")
 @EntityListeners(AuditingEntityListener.class)
 public class User {
     @Id
@@ -26,6 +26,10 @@ public class User {
     @Column(nullable = false, unique = true)
     @Setter
     protected String userName;
+
+    @OneToMany
+    @Setter
+    private List<Conversation> conversations;
 
     @Setter
     private String nickname;

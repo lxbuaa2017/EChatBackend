@@ -15,6 +15,8 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.AUTO)
     protected Integer id;
 
+    protected String conversationId;
+
 
     @ManyToMany(fetch = FetchType.EAGER)
     private List<User> users;

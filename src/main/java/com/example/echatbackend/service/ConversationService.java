@@ -26,8 +26,8 @@ public class ConversationService extends BaseService<Conversation, Integer, Conv
         return conversation;
     }
 
-    public Map<String, UUID> getOnlineUser(Integer conversationId){
-        Conversation conversation = conversationRepository.getOne(conversationId);
+    public Map<String, UUID> getOnlineUser(String conversationId){
+        Conversation conversation = conversationRepository.findByConversationId(conversationId);
         List<User> conversationUsers = conversation.getUsers();
         Map<String, UUID> onlineUsers = new HashMap<>();
         for (User user:conversationUsers) {

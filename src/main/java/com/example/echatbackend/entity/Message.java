@@ -24,7 +24,7 @@ public class Message {
 
 
     @Column(nullable = false)
-    private Integer conversationId;
+    private String conversationId;
 
     @OneToMany
     private List<User> readList;
@@ -54,7 +54,7 @@ public class Message {
     public Message() {
     }
 
-    public Message(User userM, Integer conversationId, List<User> readList, String message, String style) {
+    public Message(User userM, String conversationId, List<User> readList, String message, String style) {
         this.userM = userM;
         this.conversationId=conversationId;
         this.readList=readList;
