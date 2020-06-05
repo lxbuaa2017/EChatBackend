@@ -43,4 +43,8 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
             sort = Sort.by(Sort.Order.desc("time"));
         return messageRepository.findAllByConversationId(conversationId, PageRequest.of(offset, limit, sort));
     }
+
+    public List<Message> findAllConversationMessage(String conversationId){
+        return messageRepository.findAllByConversationId(conversationId);
+    }
 }

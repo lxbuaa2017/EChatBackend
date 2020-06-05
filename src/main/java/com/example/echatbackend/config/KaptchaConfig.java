@@ -1,4 +1,4 @@
-package com.example.echatbackend.config.reference;
+package com.example.echatbackend.config;
 
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import com.google.code.kaptcha.util.Config;

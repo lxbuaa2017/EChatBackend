@@ -1,4 +1,4 @@
-package com.example.echatbackend.config.reference;
+package com.example.echatbackend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

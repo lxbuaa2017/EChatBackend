@@ -307,7 +307,7 @@ sendValidate（加群申请）
 public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
     JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
     String state = itemJSONObj.getString("state");
-    String name= itemJSONObj.getString("name");
+    String name= EncodeUtil.toUTF8(itemJSONObj.getString("name"));
     String conversationId = itemJSONObj.getString("conversationId");
     if (state.equals("group")) {
         String groupName= itemJSONObj.getString("groupName");
@@ -417,9 +417,43 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
     @OnEvent("refuseValidate")
     public void refuseValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
-        String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
-        Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
+        Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
+        String name= EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        String conversationId = itemJSONObj.getString("conversationId");
+        //将申请信息设为已读
+        User userM = userRepository.getOne(userMId);
+        String userYName = EncodeUtil.toUTF8(itemJSONObj.getString("userYname"));
+        User userY = userRepository.findByUserName(userYName);
+        Message message = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
+        message.setStatus("2");//状态设为拒绝
+        messageRepository.save(message);
+        String state = itemJSONObj.getString("state");
+        if(state.equals("group")){
+            String groupName= itemJSONObj.getString("groupName");
+            Integer groupId = Integer.valueOf(itemJSONObj.getString("groupId"));
+            //通知申请人已拒绝
+            Message refuse_message = new Message();
+            refuse_message.setMessage(userYName+"拒绝你加入"+groupName+"的申请!");
+            refuse_message.setStatus("-1");
+            refuse_message.setState("group");
+            refuse_message.setType("info");
+            refuse_message.setUserM(userY);
+            refuse_message.setConversationId(conversationId);
+            messageRepository.save(refuse_message);
+            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",refuse_message);
 
+        }
+        else if(state.equals("friend")){
+            Message refuse_message = new Message();
+            refuse_message.setMessage(userYName+"拒绝了你的好友申请!");
+            refuse_message.setStatus("-1");
+            refuse_message.setState("friend");
+            refuse_message.setType("info");
+            refuse_message.setUserM(userY);
+            refuse_message.setConversationId(conversationId);
+            messageRepository.save(refuse_message);
+            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",refuse_message);
+        }
     }
 
 
@@ -427,21 +461,96 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
     public void setReadStatus(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
         String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
-        Integer conversationId = Integer.valueOf(itemJSONObj.getString("conversationId"));
+        User user = userRepository.findByUserName(userName);
+        String conversationId = itemJSONObj.getString("conversationId");
+        List<Message> messages = messageService.findAllConversationMessage(conversationId);
+        for(Message message:messages){
+            List<User> readList =message.getReadList();
+            if(!readList.contains(user)){
+                readList.add(user);
+                messageRepository.save(message);
+            }
+        }
 
     }
+/*
+sendValidate（好友申请）
+{
+    name: this.user.name, //发信人用户名
+    mes: this.introduce, //发信人介绍
+    time: utils.formatTime(new Date()), //发信时间
+    avatar: this.user.photo, //发信人头像
+    nickname: this.user.nickname, //发信人昵称
+    signature: this.user.signature, //发信人签名
+    read: [], //已读人id列表
+    userM: this.user.id, //发信人id
+    userY: this.$route.params.id, //对方的id
+    userYname: friend.userYname, //对方的昵称
+    userYphoto: friend.userYphoto, //对方的照片
+    userYloginName: friend.userYloginName, //对方的登录名
+    friendRoom : this.user.id + '-' + this.$route.params.id, //这次发信的会话id
+    conversationId: this.$route.params.id + '-' + this.Vchat.id.split('-')[1], //这次发信的会话id，上面friendroom颠倒一下
+    state: 'friend',
+    type: 'validate',
+    status: '0'
+}
 
+ */
+/*
+sendValidate（加群申请）
+{
+  name: this.user.name, //发信人用户名
+  mes: this.introduce, //发信人介绍
+  time: utils.formatTime(new Date()), //发信时间
+  avatar: this.user.photo, //发信头像
+  nickname: this.user.nickname, //发信人昵称
+  signature: this.user.signature, //发信人签名
+  groupName: group.groupName, //群名
+  groupId: group.groupId, //群id
+  groupPhoto: group.groupPhoto, //群头像
+  userM: this.user.id, // 申请人id
+  read: [], //已读人id列表
+ conversationId: this.$route.params.id + '-' + this.Vchat.id.split('-')[1],
+  state: 'group',
+  type: 'validate',
+  status: '0'
+}
+
+ */
     @OnEvent("sendValidate")
-    public void sendValidate(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) {
+    public void sendValidate(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
-
+        Message message = new Message();
+        String state = itemJSONObj.getString("state");
+        String mes = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
+        String conversationId = itemJSONObj.getString("conversationId");
+        Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
+        User userM = userRepository.getOne(userMId);
+        message.setState(state);
+        message.setUserM(userM);
+        message.setType("validate");
+        message.setStatus("0");
+        message.setMessage(mes);
+        message.setConversationId(conversationId);
+        if(state.equals("group")){
+            Integer groupId =Integer.valueOf(itemJSONObj.getString("groupId"));
+            Group group = groupService.findGroupById(groupId);
+            message.setGroup(group);
+        }
+        else if(state.equals("friend")){
+            Integer userYId = Integer.valueOf(itemJSONObj.getString("userY"));
+            User userY = userRepository.getOne(userYId);
+            message.setUserY(userY);
+        }
+        messageRepository.save(message);
+        socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",message);
     }
 
     @OnEvent("disconnect")
     public void disconnect(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) {
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
-        /*
-        todo
-         */
+        UUID uuid = socketIOClient.getSessionId();
+        while (clientMap.values().remove(uuid));
+        socketIOServer.getBroadcastOperations().sendEvent("leaved",clientMap);
+        logger.info("用户下线，uuid:"+uuid.toString());
     }
 }

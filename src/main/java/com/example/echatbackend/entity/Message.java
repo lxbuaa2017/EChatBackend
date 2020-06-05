@@ -43,6 +43,7 @@ public class Message {
     private String type; // validate
 
     private String status;// 0 未操作 1 同意 2 拒绝
+    //对于type为info的消息来说，则是-1拒绝，1同意
 
 
     @OneToOne
