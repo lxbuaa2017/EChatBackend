@@ -27,10 +27,6 @@ public class User {
     @Setter
     protected String userName;
 
-    @OneToMany
-    @Setter
-    private List<Conversation> conversations;
-
     @Setter
     private String nickname;
 
@@ -78,7 +74,7 @@ public class User {
     private String salt;
 
     @Setter
-    @ManyToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Conversation> conversationList = new ArrayList<>();
 
     private static String shaSaltSha(String password, String salt) {
