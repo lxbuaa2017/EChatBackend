@@ -55,7 +55,7 @@ public class User {
     private String bubble = "vchat";
 
     @Setter
-    private String avatar = "/img/picture.png";
+    private String avatar = "/display/20200603000000_picture.png";
 
     @Setter
     private String chatColor = "#ffffff";
@@ -65,7 +65,7 @@ public class User {
     private Double bgOpa = 0.2;
 
     @Setter
-    private String wallpaper = "/img/wallpaper.jpg";
+    private String wallpaper = "/display/20200603000000_wallpaper.jpg";
 
     @Column(nullable = false, columnDefinition = "char(64)")
     private String pswSHA256;
