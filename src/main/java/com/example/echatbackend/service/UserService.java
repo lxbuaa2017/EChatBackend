@@ -2,6 +2,7 @@ package com.example.echatbackend.service;
 
 import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -13,6 +14,9 @@ import java.util.Optional;
 @Service
 public class UserService extends BaseService<User, Integer, UserRepository> {
 
+    @Autowired
+    private UserRepository userRepository;
+
     public User findUserById(int id) {
         Optional<User> user = baseRepository.findById(id);
         if (user.isEmpty()) {
@@ -22,7 +26,7 @@ public class UserService extends BaseService<User, Integer, UserRepository> {
     }
 
     public User findUserByName(String username) {
-        return baseRepository.findByUserName(username);
+        return userRepository.findByUserName(username);
     }
 
     public List<User> searchUserByName(String keyword, int offset, int limit) {

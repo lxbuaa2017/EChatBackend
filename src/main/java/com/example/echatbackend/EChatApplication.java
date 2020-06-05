@@ -10,6 +10,7 @@ public class EChatApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(EChatApplication.class, args);
+
     }
 
 }
