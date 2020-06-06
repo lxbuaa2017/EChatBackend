@@ -471,6 +471,7 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
     @OnEvent("setReadStatus")
     public void setReadStatus(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        logger.info(JSON.toJSONString(messageDto));
         String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
         User user = userRepository.findByUserName(userName);
         String conversationId = itemJSONObj.getString("conversationId");

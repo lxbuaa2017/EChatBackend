@@ -7,6 +7,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -26,14 +27,14 @@ public class Message {
     @Column(nullable = false)
     private String conversationId;
 
-    @OneToMany
-    private List<User> readList;
+    @ManyToMany(fetch=FetchType.EAGER)
+    private List<User> readList = new ArrayList<>();
 
     @CreatedDate
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date time;
 
-    private String message;
+    private String message = "";
 
 
     private String style;  // mess 常规消息 emoji 表情包 img 图片 file 文件 ...
@@ -42,7 +43,7 @@ public class Message {
 
     private String type; // validate
 
-    private String status;// 0 未操作 1 同意 2 拒绝
+    private String status = "0";// 0 未操作 1 同意 2 拒绝
     //对于type为info的消息来说，则是-1拒绝，1同意
 
 
