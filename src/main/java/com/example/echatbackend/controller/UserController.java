@@ -215,6 +215,24 @@ public class UserController extends BaseController {
         return requestSuccess(result);
     }
 
+    @GetMapping("/user/getOtherUserInfo")
+    public ResponseEntity<Object> getOtherUserInfo(@RequestParam Integer id) {
+        User currentUser = userService.findUserById(id);
+        JSONObject userInfo = new JSONObject();
+        userInfo.put("name", currentUser.getUserName());
+        userInfo.put("avatar", currentUser.getAvatar());
+        userInfo.put("wallpaper", currentUser.getWallpaper());
+        userInfo.put("nickname", currentUser.getNickname());
+        userInfo.put("signature", currentUser.getSignature());
+        userInfo.put("gender", currentUser.getGender());
+        userInfo.put("id", currentUser.getId());
+        userInfo.put("bgOpa", currentUser.getBgOpa());
+        userInfo.put("conversationsList", currentUser.getConversationList().stream().map(conversation -> conversation.show(currentUser.getId())).toArray(JSONObject[]::new));
+        JSONObject result = new JSONObject();
+        result.put("code", 0);
+        result.put("data", userInfo);
+        return requestSuccess(result);
+    }
     @PostMapping("/user/updateUserInfo")
     public ResponseEntity<Object> updateUserInfo(@RequestBody JSONObject request) {
         User currentUser = tokenService.getCurrentUser();
