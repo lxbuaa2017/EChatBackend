@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.alibaba.fastjson.JSON.toJSONString;
+
 /**
  * SocketHandler
  *
@@ -147,7 +149,7 @@ public class SocketHandler {
      */
     @OnEvent("join")
     public void join(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) throws UnsupportedEncodingException {
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
         String conversationId = EncodeUtil.toUTF8(itemJSONObj.getString("conversationId"));
         Conversation conversation = conversationRepository.findByConversationId(conversationId);
@@ -193,7 +195,7 @@ public class SocketHandler {
 
     @OnEvent("leave")
     public void leave(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) throws UnsupportedEncodingException {
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
         String conversationId = itemJSONObj.getString("conversationId");
         clientMap.remove(name);
@@ -228,7 +230,7 @@ public class SocketHandler {
         }
 
          */
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
         String conversationId = itemJSONObj.getString("conversationId");
         List<String> readList = (List<String>) itemJSONObj.get("read");
@@ -265,7 +267,7 @@ public class SocketHandler {
      */
     @OnEvent("getHistoryMessages")
     public void getHistoryMessages(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto){
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String conversationId = itemJSONObj.getString("conversationId");
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
@@ -286,12 +288,19 @@ public class SocketHandler {
      */
     @OnEvent("getSystemMessages")
     public void getSystemMessages(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto){
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String conversationId = itemJSONObj.getString("conversationId");
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
-        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,-1);
-        socketIOClient.sendEvent("getSystemMessages",res);
+//        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,-1);
+        List<Message> res =  messageService.findAllConversationMessage(conversationId);
+        JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
+        logger.info("getSystemMessages\n");
+        for(JSONObject each:jsonObjects){
+            logger.info(each.toJSONString());
+        }
+        socketIOClient.sendEvent("getSystemMessages",jsonObjects);
+
     }
 /*
 sendValidate（加群申请）
@@ -316,7 +325,7 @@ sendValidate（加群申请）
  */
 @OnEvent("agreeValidate")
 public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
-    JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+    JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
     String state = itemJSONObj.getString("state");
     String name= EncodeUtil.toUTF8(itemJSONObj.getString("name"));
     String conversationId = itemJSONObj.getString("conversationId");
@@ -427,7 +436,7 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
 
     @OnEvent("refuseValidate")
     public void refuseValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         String name= EncodeUtil.toUTF8(itemJSONObj.getString("name"));
         String conversationId = itemJSONObj.getString("conversationId");
@@ -470,8 +479,8 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
 
     @OnEvent("setReadStatus")
     public void setReadStatus(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
-        logger.info(JSON.toJSONString(messageDto));
+        JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
+        logger.info(toJSONString(messageDto));
         String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
         User user = userRepository.findByUserName(userName);
         String conversationId = itemJSONObj.getString("conversationId");
@@ -531,7 +540,7 @@ sendValidate（加群申请）
  */
     @OnEvent("sendValidate")
     public void sendValidate(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody Object  messageDto) throws UnsupportedEncodingException {
-        JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
+        JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         Message message = new Message();
         String state = itemJSONObj.getString("state");
         String mes = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));

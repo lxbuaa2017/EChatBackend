@@ -2,6 +2,7 @@ package com.example.echatbackend.entity;
 
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -19,7 +20,7 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.AUTO)
     protected Integer id;
 
-    @OneToOne
+    @OneToOne(fetch=FetchType.EAGER)
     private User userM;  // 为保证同步更新，消息发出方的信息从User表内获取
 
 
@@ -31,8 +32,7 @@ public class Message {
     private List<User> readList = new ArrayList<>();
 
     @CreatedDate
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date time;
+    private Long time;
 
     private String message = "";
 
@@ -47,10 +47,10 @@ public class Message {
     //对于type为info的消息来说，则是-1拒绝，1同意
 
 
-    @OneToOne
+    @OneToOne(fetch=FetchType.EAGER)
     private Group group;
 
-    @OneToOne
+    @OneToOne(fetch=FetchType.EAGER)
     private User userY;
 
     public Message() {
@@ -64,17 +64,27 @@ public class Message {
         this.style = style;
     }
 
+
+
     public JSONObject show() {
+        List<String> nameList = new ArrayList<>();
+        for(User user:readList){
+            nameList.add(user.getUserName());
+        }
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id", id);
+        jsonObject.put("userM", userM.getId());
+        if(userY!=null)
+        jsonObject.put("userY", userY.getId());
+        if(group!=null)
+            jsonObject.put("groupId", group.getId());
         jsonObject.put("mes", message);
         jsonObject.put("time", time);
+        jsonObject.put("avatar", userM.getAvatar());
         jsonObject.put("style", style);
-        jsonObject.put("read", readList);
-        jsonObject.put("userM", userM);
-//        jsonObject.put("userId", user.id);
-//        jsonObject.put("nickname", user.getUserName());
-//        jsonObject.put("avatar", user.getAvatar());
+        jsonObject.put("read", nameList);
+        jsonObject.put("conversationId", conversationId);
+        jsonObject.put("name", userM.getUserName());
+        jsonObject.put("nickname", userM.getNickname());
         return jsonObject;
     }
 
