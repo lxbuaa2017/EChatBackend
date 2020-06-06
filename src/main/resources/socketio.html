@@ -29,15 +29,15 @@
                         name: "lx2020",
                         conversationId: "2-4"
                     };
-                    this.$socket.emit('join', val);
+                    socket.emit('join', val);
                     val = {
                         conversationId: "2-4",
                         offset: 1,
                         limit:10
                     };
-                    this.$socket.emit('getSystemMessages', val);
+                    socket.emit('getSystemMessages', val);
 
-                    this.$socket.on('getSystemMessages', (message)=> {
+                    socket.on('getSystemMessages', (message)=> {
                         console.log(message)
                     })
                 } else {

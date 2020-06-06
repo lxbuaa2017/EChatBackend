@@ -84,7 +84,8 @@ public class SocketHandler {
     @Autowired
     public SocketHandler(SocketIOServer socketIOServer, MessageRepository messageRepository, UserRepository userRepository,
                          ConversationRepository conversationRepository, ConversationService conversationService,
-                         MessageService messageService, GroupService groupService, GroupUserRepository groupUserRepository) {
+                         MessageService messageService, GroupService groupService, GroupUserRepository groupUserRepository
+    ,FriendService friendService) {
         this.socketIOServer = socketIOServer;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
@@ -93,6 +94,7 @@ public class SocketHandler {
         this.messageService = messageService;
         this.groupService = groupService;
         this.groupUserRepository = groupUserRepository;
+        this.friendService=friendService;
     }
 
     /**
@@ -295,11 +297,13 @@ public class SocketHandler {
 //        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,-1);
         List<Message> res =  messageService.findAllConversationMessage(conversationId);
         JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("data",res.stream().map(Message::show).toArray(JSONObject[]::new));
         logger.info("getSystemMessages\n");
         for(JSONObject each:jsonObjects){
             logger.info(each.toJSONString());
         }
-        socketIOClient.sendEvent("getSystemMessages",jsonObjects);
+        socketIOClient.sendEvent("getSystemMessages",jsonObject.get("data"));
 
     }
 /*
@@ -343,9 +347,11 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
             logger.info(name+" 已经成功加入群 "+groupId.toString());
             //将申请信息设为已读
             User userM = userRepository.findByUserName(name);
-            Message message = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
-            message.setStatus("1");
-            messageRepository.save(message);
+            List<Message> message = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
+            for(Message each:message){
+                each.setStatus("1");
+                messageRepository.save(each);
+            }
 
             //通知申请人已同意
             Message agree_message = new Message();
@@ -399,18 +405,24 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
             //如果已经是好友，就不处理。否则就加入好友列表
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         Integer userYId = Integer.valueOf(itemJSONObj.getString("userY"));
+        String userYName = itemJSONObj.getString("userYname");
+
         if(!friendService.checkFriend(userMId,userYId)){
             friendService.addFriend(userMId,userYId);
         }
         //将申请信息设为已读
         User userM = userRepository.findByUserName(name);
         User userY = userRepository.getOne(userYId);
-        Message message = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
-        message.setStatus("1");
-        messageRepository.save(message);
+        List<Message> messages = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
+       for(Message message:messages){
+           message.setStatus("1");
+           messageRepository.save(message);
+       }
+
         //通知申请人已同意
         Message agree_message = new Message();
-        agree_message.setMessage(userY.getUserName()+"的好友申请已通过");
+       logger.info(userYName);
+        agree_message.setMessage(userYName+"的好友申请已通过");
         agree_message.setStatus("1");
         agree_message.setState("friend");
         agree_message.setType("info");
@@ -444,9 +456,11 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
         User userM = userRepository.getOne(userMId);
         String userYName = EncodeUtil.toUTF8(itemJSONObj.getString("userYname"));
         User userY = userRepository.findByUserName(userYName);
-        Message message = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
-        message.setStatus("2");//状态设为拒绝
-        messageRepository.save(message);
+        List<Message> messages = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
+        for(Message message:messages){
+            message.setStatus("2");//状态设为拒绝
+            messageRepository.save(message);
+        }
         String state = itemJSONObj.getString("state");
         if(state.equals("group")){
             String groupName= itemJSONObj.getString("groupName");

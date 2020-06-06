@@ -34,6 +34,7 @@ public class Message {
     @CreatedDate
     private Long time;
 
+
     private String message = "";
 
 
@@ -78,9 +79,12 @@ public class Message {
         if(group!=null)
             jsonObject.put("groupId", group.getId());
         jsonObject.put("mes", message);
+        jsonObject.put("state", state);
+        jsonObject.put("type", type);
         jsonObject.put("time", time);
         jsonObject.put("avatar", userM.getAvatar());
         jsonObject.put("style", style);
+        jsonObject.put("status", status);
         jsonObject.put("read", nameList);
         jsonObject.put("conversationId", conversationId);
         jsonObject.put("name", userM.getUserName());

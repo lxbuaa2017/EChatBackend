@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Integer>, JpaSpecificationExecutor<Message> {
 //    有个隐患，没考虑多条重复申请
-    Message findMessageByConversationIdAndUserM(String conversationId, User userM);
+    List<Message> findMessageByConversationIdAndUserM(String conversationId, User userM);
     List<Message> findAllByConversationId(String conversationId, PageRequest of);
     List<Message> findAllByConversationId(String conversationId);
 }
