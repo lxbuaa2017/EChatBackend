@@ -103,6 +103,7 @@ public class UserController extends BaseController {
         user.setPassword(password);
         user.setEmail(email);
         user.setUserName(name);
+        user.setNickname(name);
         /*if (userService.findUserByName(name) != null) {
             return requestFail(-1, "用户名已被注册");
         }*/
