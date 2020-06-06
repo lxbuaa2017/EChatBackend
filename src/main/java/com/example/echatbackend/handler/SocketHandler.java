@@ -159,7 +159,7 @@ public class SocketHandler {
             conversation = new Conversation();
             conversation.setType("friend");
             User userM = userRepository.findByUserName(name);
-            User echat = userRepository.getOne(4);
+            User echat = userRepository.getOne(3);
             conversation.getUsers().add(userM);
             conversation.getUsers().add(echat);
             conversation.setConversationId(conversationId);

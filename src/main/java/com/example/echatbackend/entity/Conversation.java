@@ -17,7 +17,7 @@ public class Conversation {
     protected String conversationId;
 
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     private List<User> users = new ArrayList<>();
 
 
