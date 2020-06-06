@@ -39,10 +39,10 @@ public class User {
     private String email;
 
     @Setter
-    private Integer gender;  // 未知 0 男 1 女 2
+    private Integer gender = 0;  // 未知 0 男 1 女 2
 
     @Setter
-    private String signature;
+    private String signature = "";
 
     @CreatedDate
     private Long signUpTime;

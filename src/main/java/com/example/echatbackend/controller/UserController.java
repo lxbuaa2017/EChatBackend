@@ -1,6 +1,7 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Group;
 import com.example.echatbackend.entity.User;
@@ -37,6 +38,7 @@ public class UserController extends BaseController {
         this.userService = userService;
         this.emailCaptchaService = emailCaptchaService;
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody JSONObject request) {
@@ -285,21 +287,22 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/user/updateUserGender")
-    public ResponseEntity<Object> updateUserGender(@RequestBody JSONObject request) {
+    public ResponseEntity<Object> updateUserGender(@RequestParam Integer gender) {
         User user = tokenService.getCurrentUser();
-        Integer gender = request.getInteger("gender");
         if (gender != 0 && gender != 1 && gender != 2)
             return requestFail(-1, "第四性别不存在");
         else {
             user.setGender(gender);
+            userService.save(user);
             return requestSuccess(0);
         }
     }
 
     @GetMapping("/user/updateBgOpa")
-    public ResponseEntity<Object> updateBgOpa(@RequestBody JSONObject request) {
+    public ResponseEntity<Object> updateBgOpa(@RequestParam double bgOpa) {
         User user = tokenService.getCurrentUser();
-        user.setBgOpa(request.getDouble("bgOpa"));
+        user.setBgOpa(bgOpa);
+        userService.save(user);
         return requestSuccess(0);
     }
 }
