@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -17,7 +18,7 @@ public class Conversation {
 
 
     @ManyToMany(fetch = FetchType.EAGER)
-    private List<User> users;
+    private List<User> users = new ArrayList<>();
 
 
     private String type;  // group friend

@@ -150,6 +150,17 @@ public class SocketHandler {
         JSONObject itemJSONObj = JSONObject.parseObject(JSON.toJSONString(messageDto));
         String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
         String conversationId = EncodeUtil.toUTF8(itemJSONObj.getString("conversationId"));
+        Conversation conversation = conversationRepository.findByConversationId(conversationId);
+        if(conversation==null){//如果不存在，说明是初次登录的系统会话
+            conversation = new Conversation();
+            conversation.setType("friend");
+            User userM = userRepository.findByUserName(name);
+            User echat = userRepository.getOne(4);
+            conversation.getUsers().add(userM);
+            conversation.getUsers().add(echat);
+            conversation.setConversationId(conversationId);
+            conversationRepository.save(conversation);
+        }
         logger.info(name+" 加入连接，对话id："+conversationId);
         if(!clientMap.containsKey(name))
             clientMap.put(name,socketIOClient.getSessionId());
