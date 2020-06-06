@@ -238,7 +238,7 @@ public class UserController extends BaseController {
 
     @GetMapping("/user/getSystemUserInfo")
     public ResponseEntity<Object> getSystemUserInfo() {
-        User currentUser = userService.findUserById(4);
+        User currentUser = userService.findUserById(3);
         JSONObject userInfo = new JSONObject();
         userInfo.put("name", currentUser.getUserName());
         userInfo.put("avatar", currentUser.getAvatar());
