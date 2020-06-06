@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Socket接口测试</title>
+</head>
+
+<body>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/socket.io/2.1.1/socket.io.js"></script>
+<script type="text/javascript">
+    $(function () {
+        var myAction = {}, socket;
+
+        // var socketConfig = {
+        //     token: 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ',
+        //     task_id: '1250659e-aba9-11e8-91a6'
+        // };
+
+        $.extend(myAction, {
+            initSocket: function () {
+                socket = io("ws://127.0.0.1:9090/");  //ip
+            },
+            getData: function () {
+                if (socket.connected) {
+                    //emit
+                    console.log("join接口")
+                    let val = {
+                        name: "lx",
+                        time: "time",
+                        avatar: "photophoto",
+                        conversationId: "6886654"
+                    };
+                    this.$socket.emit('join', val);
+
+                    val = {
+                        name: "xl",
+                        time: "time",
+                        avatar: "photophoto",
+                        conversationId: "6886654"
+                    };
+                    this.$socket.emit('join', val);
+
+                    console.log("mes接口")
+                    console.log(Date.now())
+                    val = {
+                        name: "lx",
+                        mes: "this is a message",
+                        time: Date.now(),
+                        avatar: "urlurlurl",
+                        nickname: "whatever",
+                        read: ["lx"],
+                        conversationId: "6886654",
+                        style: 'mess',
+                        userM: "76755"
+                    };
+                    this.$socket.emit('mes', val);
+                    this.$socket.on('mes',(val)=>{
+                        console.log("收到了服务器转发来的消息")
+                        console.log(val)
+                    })
+                    //on
+                    this.$socket.on('connect', (val)=> {
+                        console.log(this.$socket.id);
+                        console.log('连接成功');
+                    }),
+                    this.$socket.on('customEmit', (val)=> {
+                        console.log(this.$socket.id);
+                        console.log('连接失败');
+                    }),
+                    this.$socket.on('joined', (OnlineUser)=> {
+                        console.log('当前会话用户表更新：', OnlineUser);
+                    }),
+                    this.$socket.on('leaved', (OnlineUser)=> {
+                        console.log('当前会话用户表更新：', OnlineUser);
+                    }),
+                    this.$socket.on('mes', (message)=> {
+                        console.log(message)
+                    })
+                } else {
+                    setTimeout(myAction.getData, 500);
+                }
+            },
+        });
+
+        var init = function () {
+            myAction.initSocket();
+            myAction.getData();
+        }();
+    })
+</script>
+</body>
+
+</html>

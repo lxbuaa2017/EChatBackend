@@ -34,7 +34,7 @@ public class MessageController extends BaseController {
 
     // 加载更多消息
     @PostMapping("/mes/getMoreMessage")
-    public ResponseEntity<Object> loadMoreMessages(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> loadMoreMessages(@RequestBody JSONObject request) {
         String conversationId = request.getString("conversationId");
         Integer offset = request.getInteger("offset");
         Integer limit = request.getInteger("limit");

@@ -51,7 +51,7 @@ public class SecurityController extends BaseController {
     }
 
     @PostMapping("sendEmailCaptcha")
-    public ResponseEntity<Object> sendEmailCaptcha(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> sendEmailCaptcha(@RequestBody JSONObject request) {
         var email = User.emailFormat(request.getString("email"));
         if (email == null) {
             return new ResponseEntity<>("email", HttpStatus.BAD_REQUEST);

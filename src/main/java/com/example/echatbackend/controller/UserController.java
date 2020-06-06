@@ -39,7 +39,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> login(@RequestBody JSONObject request) {
         String name = request.getString("name");
         String password = request.getString("password");
 
@@ -78,7 +78,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Object> register(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> register(@RequestBody JSONObject request) {
         String name = request.getString("name");
         String password = request.getString("password");
         String email = User.emailFormat(request.getString("email"));
@@ -115,7 +115,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/user/updateInfo")
-    public ResponseEntity<Object> updateInfo(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> updateInfo(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
         String type = request.getString("type");
         String content = request.getString("content");
@@ -138,7 +138,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/user/addConversation")
-    public ResponseEntity<Object> addConversation(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> addConversation(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
         Integer itemId = request.getInteger("itemId");
         if (itemId == null) {
@@ -168,7 +168,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/user/removeConversation")
-    public ResponseEntity<Object> removeConversation(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> removeConversation(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
         Conversation conversation;
         Integer id = request.getInteger("id");
@@ -215,7 +215,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/user/updateUserInfo")
-    public ResponseEntity<Object> updateUserInfo(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> updateUserInfo(@RequestBody JSONObject request) {
         User currentUser = tokenService.getCurrentUser();
         String type = request.getString("type");
         String content = request.getString("content");
@@ -243,7 +243,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/user/searchFriend")
-    public ResponseEntity<Object> searchFriend(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> searchFriend(@RequestBody JSONObject request) {
         String keyword = request.getString("keyword");
         Integer offset = request.getInteger("offset");
         Integer limit = request.getInteger("limit");
@@ -266,7 +266,7 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/user/updateUserGender")
-    public ResponseEntity<Object> updateUserGender(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> updateUserGender(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
         Integer gender = request.getInteger("gender");
         if (gender != 0 && gender != 1 && gender != 2)
@@ -278,7 +278,7 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/user/updateBgOpa")
-    public ResponseEntity<Object> updateBgOpa(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> updateBgOpa(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
         user.setBgOpa(request.getDouble("bgOpa"));
         return requestSuccess(0);

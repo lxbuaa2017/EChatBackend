@@ -24,14 +24,14 @@ public class FriendController extends BaseController {
 
     // 查找我的好友
     @GetMapping("/friend/getMyfriend")
-    public ResponseEntity<Object> getMyfriends(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> getMyfriends() {
         User user = tokenService.getCurrentUser();
         return ResponseEntity.ok(friendService.findFriend(user.getId()));
     }
 
     // 验证是否已加为好友
     @GetMapping("/friend/checkMyfriend")
-    public ResponseEntity<Object> checkMyfriend(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> checkMyfriend(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
         int myId = user.getId();
         int yourId = Integer.parseInt(request.getString("userid"));
@@ -51,7 +51,7 @@ public class FriendController extends BaseController {
 
     //删除好友
     @DeleteMapping("/friend/deleteMyfriend")
-    public ResponseEntity<Object> deleteMyfriend(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> deleteMyfriend(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
         int friendId = Integer.parseInt(request.getString("userid"));
         int res = friendService.deleteFriend(user, friendId);

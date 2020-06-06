@@ -28,7 +28,7 @@ public class GroupController extends BaseController {
 
     // 创建群
     @PostMapping("/group/createGroup")
-    public ResponseEntity<Object> createGroup(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> createGroup(@RequestBody JSONObject request) {
         String groupName = request.getString("groupName");
         String groupDesc = request.getString("groupDesc");
         String groupImage = request.getString("groupImage");
@@ -104,7 +104,7 @@ public class GroupController extends BaseController {
 
     // 查找群基本信息
     @PostMapping("/group/searchGroup")
-    public ResponseEntity<Object> searchGroup(@NotNull @RequestBody JSONObject request) {
+    public ResponseEntity<Object> searchGroup(@RequestBody JSONObject request) {
         String keyword = request.getString("keyword");
         Integer offset = request.getInteger("offset");
         Integer limit = request.getInteger("limit");
