@@ -330,6 +330,7 @@ sendValidate（加群申请）
 @OnEvent("agreeValidate")
 public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
     JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
+    logger.info(itemJSONObj.toJSONString());
     String state = itemJSONObj.getString("state");
     String name= EncodeUtil.toUTF8(itemJSONObj.getString("name"));
     String conversationId = itemJSONObj.getString("conversationId");
@@ -412,7 +413,7 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
         }
         //将申请信息设为已读
         User userM = userRepository.findByUserName(name);
-        User userY = userRepository.getOne(userYId);
+        User userY = userRepository.findByUserName(userYName);
         List<Message> messages = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
        for(Message message:messages){
            message.setStatus("1");
@@ -421,7 +422,6 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
 
         //通知申请人已同意
         Message agree_message = new Message();
-       logger.info(userYName);
         agree_message.setMessage(userYName+"的好友申请已通过");
         agree_message.setStatus("1");
         agree_message.setState("friend");
@@ -440,7 +440,7 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
         userY.getConversationList().add(conversation);
         userRepository.save(userM);
         userRepository.save(userY);
-        socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",agree_message);
+        socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",agree_message.show());
         socketIOClient.sendEvent("ValidateSuccess","ok");
     }
     }
