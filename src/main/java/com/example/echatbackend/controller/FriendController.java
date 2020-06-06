@@ -31,21 +31,31 @@ public class FriendController extends BaseController {
 
     // 验证是否已加为好友
     @GetMapping("/friend/checkMyfriend")
-    public ResponseEntity<Object> checkMyfriend(@RequestBody JSONObject request) {
+    public ResponseEntity<Object> checkMyfriend(@RequestParam Integer userid) {
         User user = tokenService.getCurrentUser();
         int myId = user.getId();
-        int yourId = Integer.parseInt(request.getString("userid"));
+//        int yourId = Integer.parseInt(userid);
+        int yourId = userid;
+        JSONObject jsonObject = new JSONObject();
         if (myId < yourId) {
-            if (friendService.checkFriend(myId, yourId))
-                return ResponseEntity.ok(true);
-            else
-                return ResponseEntity.ok(false);
+            if (friendService.checkFriend(myId, yourId)) {
+                jsonObject.put("isMyfriend", true);
+                return ResponseEntity.ok(jsonObject);
+            }
+            else{
+                jsonObject.put("isMyfriend",false);
+                return ResponseEntity.ok(jsonObject);
+            }
         }
         else {
-            if (friendService.checkFriend(yourId, myId))
-                return ResponseEntity.ok(true);
-            else
-                return ResponseEntity.ok(false);
+            if (friendService.checkFriend(yourId, myId)) {
+                jsonObject.put("isMyfriend", true);
+                return ResponseEntity.ok(jsonObject);
+            }
+            else{
+                jsonObject.put("isMyfriend", false);
+                return ResponseEntity.ok(jsonObject);
+            }
         }
     }
 
