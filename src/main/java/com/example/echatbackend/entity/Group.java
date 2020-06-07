@@ -21,6 +21,10 @@ public class Group {
     @Setter
     private String avatar;
 
+    @OneToOne
+    @Column(nullable = false)
+    private Conversation conversation;
+
     @Setter
     private String description;
     @Column(nullable = false)
@@ -32,7 +36,7 @@ public class Group {
 
     @OneToOne
     @Setter
-    private User user;  // 群主账号
+    private User holder;  // 群主账号
 
     public Group() {
         this.userNum = 1;
@@ -44,7 +48,7 @@ public class Group {
         jsonObject.put("groupName", name);
         jsonObject.put("groupDesc", description);
         jsonObject.put("groupAvatar", avatar);
-        jsonObject.put("holder", user.id);
+        jsonObject.put("holder", holder.id);
         return jsonObject;
     }
 }
