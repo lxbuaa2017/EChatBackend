@@ -41,7 +41,7 @@ public class FriendService {
         if (optionalUser.isEmpty()) {
             return false;
         }
-        return (friendRepository.findByUserMAndUserY(user, optionalUser.get()) != null) &&
+        return (friendRepository.findByUserMAndUserY(user, optionalUser.get()) != null) ||
                 (friendRepository.findByUserMAndUserY(optionalUser.get(), user) != null);
     }
 
