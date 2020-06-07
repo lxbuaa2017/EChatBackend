@@ -35,7 +35,7 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
 
     //reverse 按时间 1为正序，-1为倒序
     public List<Message> getMoreMessage(String conversationId, int offset, int limit, int reverse) {
-        Specification<Message> messageSpecification = (Specification<Message>) (root, criteriaQuery, cb) -> cb.equal(root.get("conversation_id"), conversationId);
+        Specification<Message> messageSpecification = (Specification<Message>) (root, criteriaQuery, cb) -> cb.equal(root.get("conversationId"), conversationId);
         Sort sort;
         if (reverse == 1)
             sort = Sort.by(Sort.Order.asc("time"));
