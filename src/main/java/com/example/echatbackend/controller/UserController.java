@@ -1,12 +1,10 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Group;
 import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.*;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -158,7 +156,7 @@ public class UserController extends BaseController {
             List<User> userList = new ArrayList<>();
             userList.add(user);
             userList.add(friend);
-            conversation = conversationService.addConversation("friend",null,userList);
+            conversation = conversationService.addConversation("friend", null, userList);
             /*
             todo
              记得加上conversationId
@@ -170,7 +168,7 @@ public class UserController extends BaseController {
             if (group == null) {
                 return requestFail(-1, "群组不存在");
             }
-            conversation = conversationService.addConversation("group",group,null);
+            conversation = conversationService.addConversation("group", group, null);
                         /*
             todo
              记得加上conversationId

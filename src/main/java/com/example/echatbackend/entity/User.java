@@ -108,6 +108,7 @@ public class User {
         jsonObject.put("nickname", nickname);
         jsonObject.put("avatar", avatar);
         jsonObject.put("signature", signature);
+        jsonObject.put("gender", gender);
         return jsonObject;
     }
 

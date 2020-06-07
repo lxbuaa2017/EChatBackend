@@ -1,0 +1,315 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>WebRTC视频通话</title>
+	<meta charset="utf-8"/>
+	<meta content="width=device-width" name="viewport"/>
+	<meta content="视频应用,WebRTC,HTML5视频通话,网页在线视频通话,视频通话,视频聊天" name="keywords"/>
+	<meta content="使用WebRTC实现的网页视频通话，浏览者可以用来进行视频聊天。" name="description"/>
+
+	<!--
+        注意：1.本功能暂时只支持google chrome浏览器；
+             2.本功能暂时只支持两人视频聊天；
+             3.由于本功能可以让游客使用，使用session的ID区分不同用户，所以请不要使用同一个浏览器两个窗口之间通话；
+             4.由于宽带有限所以对同事在线通话人数有限制，每天晚上0点将会销毁所有通话，所以该时刻可能出现异常情况。
+             5.注意如果2分钟对方未进入聊天室，将会关闭；
+             5.手机可以使用chrome移动版也可以视频聊天；
+             6.如果你不能访问google，也不能使用本功能；
+        以上。
+
+        参考文章：http://blog.csdn.net/leecho571/article/details/8146525
+     -->
+
+	<!-- <script src="https://talkgadget.google.com/talkgadget/channel.js"></script> -->
+	<script src="https://static.acgist.com/demo/video/channel.js"></script>
+	<style type="text/css">
+		* {
+			margin: 0;
+			padding: 0;
+			overflow-y: hidden;
+		}
+
+		body {
+			background-color: rgb(34, 34, 34);
+		}
+
+		.main {
+			margin: auto;
+		}
+
+		.localVideo {
+			box-shadow: 0 0 20px #000;
+			width: 15%;
+			display: block;
+			position: fixed;
+			left: 25%;
+		}
+
+		.remoteVideo {
+			box-shadow: 0 0 20px #000;
+			width: 50%;
+			display: block;
+			position: fixed;
+			left: 25%;
+		}
+
+		.footer {
+			position: fixed;
+			bottom: 0;
+			width: 100%;
+			height: auto;
+			background-color: #404040;
+			color: #fff;
+			font-size: 14px;
+			font-weight: bold;
+			line-height: 28px;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+<div class="main">
+	<video autoplay="autoplay" class="localVideo" id="localVideo"></video>
+	<video autoplay="autoplay" class="remoteVideo" id="remoteVideo"></video>
+</div>
+<div class="footer" id="footer"></div>
+<script type="text/javascript">
+	/**
+	 A：连接房间
+	 B：创建房间
+	 流程：
+	 A、B都连接WebSocket服务器（可以使用其他方法代替）；
+	 A创建本地视频，获取会话描述对象（offer sdp）信息并通过WS发送给B；
+	 B收到A的offer后创建本地视频，获取会话描述对象（answer sdp）信息并通过WS发送给A；
+	 A、B收集ice信息并通过WS交换，然后就可以进行视频通话；
+	 **/
+	if (document.location.protocol === "http:") {
+		location.href = "https:" + location.href.substring(5);
+	}
+	var peer;
+	var socket; // WebSocket
+	var supportStream = false; // 是否支持使用数据流
+	var localVideo; // 本地视频
+	var localVideoStream; // 本地视频流
+	var remoteVideo; // 远程视频
+	var remoteVideoStream; // 远程视频流
+	var initiator = false; // 是否已经有人在等待
+	var started = false; // 是否开始
+	var channelReady = false; // 是否打开WebSocket通道
+	var PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+
+	// 初始
+	function initialize() {
+		console.log("初始聊天");
+		// 获取视频
+		localVideo = document.getElementById("localVideo");
+		remoteVideo = document.getElementById("remoteVideo");
+		supportStream = "srcObject" in localVideo;
+		// 显示状态
+		if (initiator) {
+			setNotice("开始连接");
+		} else {
+			setNotice("加入聊天：https://127.0.0.1:8443/demo/video/?oid=123456");
+		}
+		// 打开WebSocket
+		openChannel();
+		// 创建用户媒体
+		buildUserMedia();
+	}
+
+	function openChannel() {
+		console.log("打开WebSocket");
+		socket = new WebSocket("ws://127.0.0.1:8443/video/123456");
+		socket.onopen = channelOpened;
+		socket.onmessage = channelMessage;
+		socket.onclose = channelClosed;
+		socket.onerror = channelError;
+	}
+
+	function channelOpened() {
+		console.log("打开WebSocket成功");
+		channelReady = true;
+	}
+
+	function channelMessage(message) {
+		console.log("收到消息：" + message.data);
+		var msg = JSON.parse(message.data);
+		if (msg.type === "offer") { // 处理Offer消息
+			if (!initiator && !started) {
+				connectPeer();
+			}
+			peer.setRemoteDescription(new RTCSessionDescription(msg));
+			peer.createAnswer().then(buildLocalDescription);
+		} else if (msg.type === "answer" && started) { // 处理Answer消息
+			peer.setRemoteDescription(new RTCSessionDescription(msg));
+		} else if (msg.type === "candidate" && started) {
+			var candidate = new RTCIceCandidate({
+				sdpMLineIndex: msg.label,
+				candidate: msg.candidate
+			});
+			peer.addIceCandidate(candidate);
+		} else if (msg.type === "bye" && started) {
+			onRemoteClose();
+			setNotice("对方已断开！");
+		} else if (msg.type === "nowaiting") {
+			onRemoteClose();
+			setNotice("对方已离开！");
+		}
+	}
+
+	function channelClosed() {
+		console.log("关闭WebSocket");
+		openChannel(); // 重新打开WebSocket
+	}
+
+	function channelError(event) {
+		console.log("WebSocket异常：" + event);
+	}
+
+	function buildUserMedia() {
+		console.log("获取用户媒体");
+		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+			navigator.mediaDevices.getUserMedia({
+				"audio": true,
+				"video": true
+			})
+					.then(onUserMediaSuccess)
+					.catch(onUserMediaError);
+		} else {
+			navigator.getUserMedia({
+				"audio": true,
+				"video": true
+			}, onUserMediaSuccess, onUserMediaError);
+		}
+	}
+
+	function onUserMediaSuccess(stream) {
+		localVideoStream = stream;
+		if (supportStream) {
+			localVideo.srcObject = localVideoStream;
+		} else {
+			localVideo.src = URL.createObjectURL(localVideoStream);
+		}
+		if (initiator) {
+			connectPeer();
+		}
+	}
+
+	function onUserMediaError(error) {
+		alert("请打开摄像头！");
+	}
+
+	function connectPeer() {
+		if (!started && localVideoStream && channelReady) {
+			console.log("开始连接Peer");
+			started = true;
+			buildPeerConnection();
+			peer.addStream(localVideoStream);
+			if (initiator) {
+				peer.createOffer().then(buildLocalDescription);
+			}
+		}
+	}
+
+	function buildPeerConnection() {
+		//var server = {"iceServers" : [{"url" : "stun:stun.l.google.com:19302"}]};
+		var server = {"iceServers": [{"url": "stun:stun1.l.google.com:19302"}]};
+		peer = new PeerConnection(server);
+		peer.onicecandidate = peerIceCandidate;
+		peer.onconnecting = peerConnecting;
+		peer.onopen = peerOpened;
+		peer.onaddstream = peerAddStream;
+		peer.onremovestream = peerRemoveStream;
+	}
+
+	function peerIceCandidate(event) {
+		if (event.candidate) {
+			sendMessage({
+				type: "candidate",
+				id: event.candidate.sdpMid,
+				label: event.candidate.sdpMLineIndex,
+				candidate: event.candidate.candidate
+			});
+		} else {
+			console.log("不支持的candidate");
+		}
+	}
+
+	function peerConnecting(message) {
+		console.log("Peer连接");
+	}
+
+	function peerOpened(message) {
+		console.log("Peer打开");
+	}
+
+	function peerAddStream(event) {
+		console.log("远程视频添加");
+		remoteVideoStream = event.stream;
+		if (supportStream) {
+			remoteVideo.srcObject = remoteVideoStream;
+		} else {
+			remoteVideo.src = URL.createObjectURL(remoteVideoStream);
+		}
+		setNotice("连接成功");
+		waitForRemoteVideo();
+	}
+
+	function peerRemoveStream(event) {
+		console.log("远程视频移除");
+	}
+
+	function buildLocalDescription(description) {
+		peer.setLocalDescription(description);
+		sendMessage(description);
+	}
+
+	function sendMessage(message) {
+		var msgJson = JSON.stringify(message);
+		socket.send(msgJson);
+		console.log("发送信息：" + msgJson);
+	}
+
+	function setNotice(msg) {
+		document.getElementById("footer").innerHTML = msg;
+	}
+
+	function onRemoteClose() {
+		started = false;
+		initiator = false;
+		if (supportStream) {
+			remoteVideo.srcObject = null;
+		} else {
+			remoteVideo.src = null;
+		}
+		peer.close();
+	}
+
+	function waitForRemoteVideo() {
+		if (remoteVideo.currentTime > 0) { // 判断远程视频长度
+			setNotice("连接成功！");
+		} else {
+			setTimeout(waitForRemoteVideo, 100);
+		}
+	}
+
+	window.onbeforeunload = function () {
+		sendMessage({type: "bye"});
+		if (peer) {
+			peer.close();
+		}
+		socket.close();
+	};
+	if (!WebSocket) {
+		alert("你的浏览器不支持WebSocket！");
+	} else if (!PeerConnection) {
+		alert("你的浏览器不支持RTCPeerConnection！");
+	} else {
+		setTimeout(initialize, 100); // 加载完成调用初始化方法
+	}
+	window.onbeforeunload = function () {
+		socket.close();
+	}
+</script>
+</body>
+</html>

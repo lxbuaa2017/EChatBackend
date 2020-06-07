@@ -10,6 +10,8 @@ import java.util.List;
 @Repository
 public interface FriendRepository extends JpaRepository<Friend, Integer> {
     Friend findByUserMAndUserY(User userM, User userY);
+
     List<Friend> findAllByUserM(User user);
+
     List<Friend> findAllByUserY(User user);
 }

@@ -19,13 +19,12 @@ public class ConversationService extends BaseService<Conversation, Integer, Conv
     @Autowired
     private ConversationRepository conversationRepository;
 
-    public Conversation addConversation(String type,Group group,List<User> users) {
+    public Conversation addConversation(String type, Group group, List<User> users) {
         Conversation conversation = new Conversation();
         conversation.setType(type);
-        if(type.equals("friend")){
+        if (type.equals("friend")) {
             conversation.setUsers(users);
-        }
-        else {
+        } else {
             conversation.setGroup(group);
         }
         baseRepository.saveAndFlush(conversation);
