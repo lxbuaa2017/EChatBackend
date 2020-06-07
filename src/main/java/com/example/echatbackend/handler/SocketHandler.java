@@ -434,7 +434,7 @@ public class SocketHandler {
 
             //通知申请人已同意
             Message agree_message = new Message();
-            agree_message.setMessage(userYName + " 向 "+name+" 发送的好友申请已通过");
+            agree_message.setMessage( name+ " 向 "+userYName+" 发送的好友申请已通过");
             agree_message.setStatus("1");
             agree_message.setState("friend");
             agree_message.setType("info");
