@@ -15,4 +15,5 @@ public interface MessageRepository extends JpaRepository<Message, Integer>, JpaS
     List<Message> findMessageByConversationIdAndUserM(String conversationId, User userM);
     List<Message> findAllByConversationId(String conversationId, PageRequest of);
     List<Message> findAllByConversationId(String conversationId);
+    void deleteMessagesByConversationId(String conversationId);
 }

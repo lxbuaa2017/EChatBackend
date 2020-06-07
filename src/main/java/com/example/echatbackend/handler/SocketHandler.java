@@ -443,29 +443,29 @@ public class SocketHandler {
             agree_message.setConversationId(conversationId);
             Message agree_message1 = new Message();
             BeanUtils.copyProperties(agree_message,agree_message1);
-            agree_message1.setConversationId(userYId+"-"+ConstValue.ECHAT_ID);
+            agree_message1.setId(null);
+            agree_message1.setConversationId(userMId+"-"+ConstValue.ECHAT_ID);
             messageRepository.save(agree_message);
             messageRepository.save(agree_message1);
-            if (conversationRepository.findByConversationId(conversationId) == null) {
-                Conversation conversation = new Conversation();
-                if(userMId<userYId){
-                    conversationId = userMId+"-"+userYId;
-                }
-                else {
-                    conversationId = userYId+"-"+userMId;
-                }
-                conversation.setConversationId(conversationId);
-                conversation.setType("friend");
-                conversation.getUsers().add(userM);
-                conversation.getUsers().add(userY);
-                conversationRepository.save(conversation);
-                userM.getConversationList().add(conversation);
-                userY.getConversationList().add(conversation);
-                userRepository.save(userM);
-                userRepository.save(userY);
-                socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", agree_message.show());
-                socketIOClient.sendEvent("ValidateSuccess", "ok");
+            if(userMId<userYId){
+                conversationId = userMId+"-"+userYId;
             }
+            else {
+                conversationId = userYId+"-"+userMId;
+            }
+
+            Conversation conversation = new Conversation();
+            conversation.setConversationId(conversationId);
+            conversation.setType("friend");
+            conversation.getUsers().add(userM);
+            conversation.getUsers().add(userY);
+            conversationRepository.save(conversation);
+            userM.getConversationList().add(conversation);
+            userY.getConversationList().add(conversation);
+            userRepository.save(userM);
+            userRepository.save(userY);
+            socketIOServer.getRoomOperations(userMId+"-"+ConstValue.ECHAT_ID).sendEvent("takeValidate", agree_message.show());
+            socketIOClient.sendEvent("ValidateSuccess", "ok");
         }
     }
 
@@ -582,7 +582,7 @@ sendValidate（加群申请）
         Message message = new Message();
         String state = itemJSONObj.getString("state");
         String mes = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
-        String conversationId = itemJSONObj.getString("conversationId");//发送者与系统会话的id
+        String conversationId = itemJSONObj.getString("conversationId");
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         User userM = userRepository.getOne(userMId);
         message.setState(state);
@@ -591,22 +591,21 @@ sendValidate（加群申请）
         message.setStatus("0");
         message.setMessage(mes);
         message.setConversationId(conversationId);
-        String userYAndSystemConversationId = "";
+        String userMAndSystemConversationId = "";
         if (state.equals("group")) {
             Integer groupId = Integer.valueOf(itemJSONObj.getString("groupId"));
             Group group = groupService.findGroupById(groupId);
             message.setGroup(group);
             Integer holderId = group.getUser().getId();
-            userYAndSystemConversationId = holderId+"-"+ ConstValue.ECHAT_ID;
         } else if (state.equals("friend")) {
             Integer userYId = Integer.valueOf(itemJSONObj.getString("userY"));
             User userY = userRepository.getOne(userYId);
             message.setUserY(userY);
-            userYAndSystemConversationId = userYId+"-"+ ConstValue.ECHAT_ID;
         }
+        userMAndSystemConversationId = userMId+"-"+ ConstValue.ECHAT_ID;
         Message message1 =new Message();
         BeanUtils.copyProperties(message,message1);
-        message1.setConversationId(userYAndSystemConversationId);
+        message1.setConversationId(userMAndSystemConversationId);
         messageRepository.save(message);
         messageRepository.save(message1);
         socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", message);

@@ -3,6 +3,7 @@ package com.example.echatbackend.service;
 import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.dao.ConversationRepository;
 import com.example.echatbackend.dao.FriendRepository;
+import com.example.echatbackend.dao.MessageRepository;
 import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Friend;
@@ -21,12 +22,14 @@ public class FriendService {
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
     private final ConversationRepository conversationRepository;
+    private final MessageRepository messageRepository;
     @Autowired
     public FriendService(FriendRepository friendRepository, UserRepository userRepository
-    , ConversationRepository conversationRepository) {
+    , ConversationRepository conversationRepository,MessageRepository messageRepository) {
         this.friendRepository = friendRepository;
         this.userRepository = userRepository;
         this.conversationRepository = conversationRepository;
+        this.messageRepository=messageRepository;
     }
 
     public JSONObject findFriend(User user) {
@@ -71,6 +74,7 @@ public class FriendService {
             userRepository.save(user);
             userRepository.save(friend);
             friendRepository.delete(friendRelationship);
+            messageRepository.deleteMessagesByConversationId(conversationId);
             return true;
         } else {
             return false;
