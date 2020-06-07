@@ -595,7 +595,7 @@ sendValidate（加群申请）
             Integer groupId = Integer.valueOf(itemJSONObj.getString("groupId"));
             Group group = groupService.findGroupById(groupId);
             message.setGroup(group);
-            Integer holderId = group.getHolder().getId();
+            Integer holderId = group.getUser().getId();
             userYAndSystemConversationId = holderId+"-"+ ConstValue.ECHAT_ID;
         } else if (state.equals("friend")) {
             Integer userYId = Integer.valueOf(itemJSONObj.getString("userY"));

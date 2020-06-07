@@ -2,6 +2,8 @@ package com.example.echatbackend.entity;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ public class Conversation {
 
 
     @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
     private List<User> users = new ArrayList<>();
 
 
