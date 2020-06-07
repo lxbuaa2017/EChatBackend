@@ -269,8 +269,8 @@ public class SocketHandler {
         String conversationId = itemJSONObj.getString("conversationId");
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
-//        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,1);
-        List<Message> res = messageService.findAllConversationMessage(conversationId);
+        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,-1);
+//        List<Message> res = messageService.findAllConversationMessage(conversationId);
         JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data", res.stream().map(Message::show).toArray(JSONObject[]::new));
@@ -298,8 +298,8 @@ public class SocketHandler {
         String conversationId = itemJSONObj.getString("conversationId");
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
-//        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,-1);
-        List<Message> res = messageService.findAllConversationMessage(conversationId);
+        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,-1);
+//        List<Message> res = messageService.findAllConversationMessage(conversationId);
         JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data", res.stream().map(Message::show).toArray(JSONObject[]::new));
