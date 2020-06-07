@@ -33,12 +33,8 @@ public class FriendController extends BaseController {
     public ResponseEntity<Object> checkMyfriend(@RequestParam Integer userid) {
         User user = tokenService.getCurrentUser();
         JSONObject jsonObject = new JSONObject();
-        if (friendService.checkFriend(user, userid)) {
-            jsonObject.put("isMyfriend", true);
-        } else {
-            jsonObject.put("isMyfriend", false);
-        }
-        return ResponseEntity.ok(jsonObject);
+        jsonObject.put("isMyfriend", friendService.checkFriend(user, userid));
+        return requestSuccess(jsonObject);
     }
 
     //删除好友
