@@ -37,26 +37,15 @@ public class FriendController extends BaseController {
 //        int yourId = Integer.parseInt(userid);
         int yourId = userid;
         JSONObject jsonObject = new JSONObject();
-        if (myId < yourId) {
-            if (friendService.checkFriend(myId, yourId)) {
-                jsonObject.put("isMyfriend", true);
-                return ResponseEntity.ok(jsonObject);
-            }
-            else{
-                jsonObject.put("isMyfriend",false);
-                return ResponseEntity.ok(jsonObject);
-            }
+        if (friendService.checkFriend(myId, yourId)||friendService.checkFriend(yourId, myId)) {
+            jsonObject.put("isMyfriend", true);
+            return ResponseEntity.ok(jsonObject);
         }
-        else {
-            if (friendService.checkFriend(yourId, myId)) {
-                jsonObject.put("isMyfriend", true);
-                return ResponseEntity.ok(jsonObject);
-            }
-            else{
-                jsonObject.put("isMyfriend", false);
-                return ResponseEntity.ok(jsonObject);
-            }
+        else{
+            jsonObject.put("isMyfriend",false);
+            return ResponseEntity.ok(jsonObject);
         }
+
     }
 
     //删除好友
