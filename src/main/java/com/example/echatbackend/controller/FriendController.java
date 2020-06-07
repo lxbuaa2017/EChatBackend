@@ -25,37 +25,20 @@ public class FriendController extends BaseController {
     @GetMapping("/friend/getMyfriend")
     public ResponseEntity<Object> getMyfriends() {
         User user = tokenService.getCurrentUser();
-        return ResponseEntity.ok(friendService.findFriend(user.getId()));
+        return requestSuccess(friendService.findFriend(user));
     }
 
     // 验证是否已加为好友
     @GetMapping("/friend/checkMyfriend")
     public ResponseEntity<Object> checkMyfriend(@RequestParam Integer userid) {
         User user = tokenService.getCurrentUser();
-        int myId = user.getId();
-//        int yourId = Integer.parseInt(userid);
-        int yourId = userid;
         JSONObject jsonObject = new JSONObject();
-        if (myId < yourId) {
-            if (friendService.checkFriend(myId, yourId)) {
-                jsonObject.put("isMyfriend", true);
-                return ResponseEntity.ok(jsonObject);
-            }
-            else{
-                jsonObject.put("isMyfriend",false);
-                return ResponseEntity.ok(jsonObject);
-            }
+        if (friendService.checkFriend(user, userid)) {
+            jsonObject.put("isMyfriend", true);
+        } else {
+            jsonObject.put("isMyfriend", false);
         }
-        else {
-            if (friendService.checkFriend(yourId, myId)) {
-                jsonObject.put("isMyfriend", true);
-                return ResponseEntity.ok(jsonObject);
-            }
-            else{
-                jsonObject.put("isMyfriend", false);
-                return ResponseEntity.ok(jsonObject);
-            }
-        }
+        return ResponseEntity.ok(jsonObject);
     }
 
     //删除好友
@@ -66,10 +49,10 @@ public class FriendController extends BaseController {
         if (friendId == null) {
             return requestFail(-1, "参数错误");
         }
-        int res = friendService.deleteFriend(user, friendId);
-        if (res == -1)
-            return requestFail(-1, "fail to delete a friend");
-        else
+        if (friendService.deleteFriend(user, friendId)) {
             return requestSuccess(0);
+        } else {
+            return requestFail(-1, "删除失败，好友不存在");
+        }
     }
 }

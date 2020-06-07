@@ -8,8 +8,8 @@ import com.example.echatbackend.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,61 +25,50 @@ public class FriendService {
         this.userRepository = userRepository;
     }
 
-
-    public JSONObject findFriend(int userId) {
-        User user = userRepository.findById(userId).get();
+    public JSONObject findFriend(User user) {
         List<Friend> friend1 = friendRepository.findAllByUserM(user);
         List<Friend> friend2 = friendRepository.findAllByUserY(user);
-        //            groupUsers.stream().map(GroupUser::getUser).toArray(User[]::new);
-
         Set<User> friends = friend1.stream().map(Friend::getUserY).collect(Collectors.toSet());
-        List<User> users2 = friend2.stream().map(Friend::getUserM).collect(Collectors.toList());
-        friends.addAll(users2);
-//            friends.addAll(friend2.stream().map(Friend::getUserM).collect(Collectors.toSet()));
+        friend2.forEach(friend -> friends.add(friend.getUserM()));
         friends.remove(user);
-        List<JSONObject> data = new ArrayList<>();
-        for (User each : friends) {
-            JSONObject jsonobject = new JSONObject();
-            jsonobject.put("nickname", each.getNickname());
-            jsonobject.put("avatar", each.getAvatar());
-            jsonobject.put("signature", each.getSignature());
-            jsonobject.put("id", each.getId());
-            jsonobject.put("gender", each.getGender());
-            data.add(jsonobject);
-        }
         JSONObject res = new JSONObject();
-        res.put("code", 0);
-        res.put("data", data);
+        res.put("data", friends.stream().map(User::show).toArray(JSONObject[]::new));
         return res;
     }
 
-    public boolean checkFriend(int userYid, int userMid) {
-        User userY = userRepository.findById(userYid).get();
-        User userM = userRepository.findById(userMid).get();
-        return friendRepository.findByUserMAndUserY(userY, userM) != null;
+    public boolean checkFriend(User user, int userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
+        return (friendRepository.findByUserMAndUserY(user, optionalUser.get()) != null) &&
+                (friendRepository.findByUserMAndUserY(optionalUser.get(), user) != null);
     }
 
-    //fail: -1  success: 0
-    public int deleteFriend(User thisUser, int friendId) {
-        User friend = userRepository.findById(friendId).get();
+    public boolean deleteFriend(User user, int friendId) {
+        Optional<User> optionalUser = userRepository.findById(friendId);
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
         Friend friendRelationship;
-        if (thisUser.getId() < friendId)
-            friendRelationship = friendRepository.findByUserMAndUserY(thisUser, friend);
-        else
-            friendRelationship = friendRepository.findByUserMAndUserY(friend, thisUser);
-        if (friendRelationship == null)
-            return -1;
-        else {
+        friendRelationship = friendRepository.findByUserMAndUserY(user, optionalUser.get());
+        if (friendRelationship == null) {
+            friendRelationship = friendRepository.findByUserMAndUserY(optionalUser.get(), user);
+        }
+        if (friendRelationship != null) {
             friendRepository.delete(friendRelationship);
-            return 0;
+            return true;
+        } else {
+            return false;
         }
     }
 
     public void addFriend(int userMid, int userYid) {
-        User userM = userRepository.findById(userMid).get();
-        User userY = userRepository.findById(userYid).get();
-        Friend friend = new Friend(userY,userM);
-        friendRepository.save(friend);
+        Optional<User> optionalUserM = userRepository.findById(userMid);
+        Optional<User> optionalUserY = userRepository.findById(userYid);
+        if (optionalUserM.isPresent() && optionalUserY.isPresent()) {
+            Friend friend = new Friend(optionalUserM.get(), optionalUserY.get());
+            friendRepository.saveAndFlush(friend);
+        }
     }
-
 }
