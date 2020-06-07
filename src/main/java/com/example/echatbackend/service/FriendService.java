@@ -32,7 +32,7 @@ public class FriendService {
             List<Friend> friend2 = friendRepository.findAllByUserY(user);
         //            groupUsers.stream().map(GroupUser::getUser).toArray(User[]::new);
 
-             Set<User> friends = friend1.stream().map(Friend::getUserY).collect(Collectors.toSet());
+            Set<User> friends = friend1.stream().map(Friend::getUserY).collect(Collectors.toSet());
             List<User> users2 = friend2.stream().map(Friend::getUserM).collect(Collectors.toList());
             friends.addAll(users2);
 //            friends.addAll(friend2.stream().map(Friend::getUserM).collect(Collectors.toSet()));
