@@ -30,8 +30,8 @@ public class UserService extends BaseService<User, Integer, UserRepository> {
     }
 
     public List<User> searchUserByName(String keyword, int offset, int limit) {
-        Specification<User> userSpecification = (Specification<User>) (root, criteriaQuery, cb) -> cb.like(root.get("userName"), "%" + keyword + "%");
-        Sort sort = Sort.by(Sort.Order.asc("userName"));
+        Specification<User> userSpecification = (Specification<User>) (root, criteriaQuery, cb) -> cb.like(root.get("user_name"), "%" + keyword + "%");
+        Sort sort = Sort.by(Sort.Order.asc("user_name"));
         return baseRepository.findAll(userSpecification, PageRequest.of(offset, limit, sort)).getContent();
     }
 
