@@ -27,17 +27,27 @@
                     //emit
                     let val = {
                         name: "lx2020",
-                        conversationId: "2-4"
+                        conversationId: "1-2"
                     };
                     socket.emit('join', val);
                     val = {
-                        conversationId: "2-4",
+                        conversationId: "16",
                         offset: 1,
                         limit:10
                     };
                     socket.emit('getSystemMessages', val);
 
                     socket.on('getSystemMessages', (message)=> {
+                        console.log(message)
+                    })
+                    val = {
+                        conversationId: "1-2",
+                        offset: 1,
+                        limit:100
+                    };
+                    socket.emit('getHistoryMessages', val);
+
+                    socket.on('getHistoryMessages', (message)=> {
                         console.log(message)
                     })
                 } else {

@@ -64,7 +64,7 @@ public class SocketHandler {
 
     private MessageService messageService;
 
-    private final GroupService groupService;
+    private GroupService groupService;
 
     private FriendService friendService;
     /**
@@ -102,6 +102,7 @@ public class SocketHandler {
 
     @OnConnect
     public void onConnect(SocketIOClient client) {
+        logger.info("socket:onConnect");
         if (client != null) {
             logger.info(String.valueOf(client.getHandshakeData().getUrlParams()));
         } else {
@@ -117,6 +118,7 @@ public class SocketHandler {
      */
     @OnDisconnect
     public void onDisConnect(SocketIOClient socketIOClient) {
+        logger.info("socket:onDisConnect");
         String userName = socketIOClient.getHandshakeData().getSingleUrlParam("userName");
         if (StringUtils.isNotBlank(userName)) {
             logger.info("用户{}断开长连接通知, NettySocketSessionId: {}, NettySocketRemoteAddress: {}",
@@ -147,8 +149,9 @@ public class SocketHandler {
     @OnEvent("join")
     public void join(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
-        String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
-        String conversationId = EncodeUtil.toUTF8(itemJSONObj.getString("conversationId"));
+        String name = itemJSONObj.getString("name");
+        logger.info("socket:join:"+name);
+        String conversationId = itemJSONObj.getString("conversationId");
         Conversation conversation = conversationRepository.findByConversationId(conversationId);
         if (conversation == null) {//如果不存在，说明是初次登录的系统会话
             conversation = new Conversation();
@@ -193,7 +196,8 @@ public class SocketHandler {
     @OnEvent("leave")
     public void leave(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
-        String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        String name = itemJSONObj.getString("name");
+        logger.info("socket:leave:"+name);
         String conversationId = itemJSONObj.getString("conversationId");
         clientMap.remove(name);
         socketIOClient.leaveRoom(conversationId);
@@ -212,6 +216,7 @@ public class SocketHandler {
      */
     @OnEvent("mes")
     public void mes(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
+       logger.info("socket:mes");
         /*
         mes
         {
@@ -228,7 +233,7 @@ public class SocketHandler {
 
          */
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
-        String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        String userName = itemJSONObj.getString("name");
         String conversationId = itemJSONObj.getString("conversationId");
         List<String> readList = (List<String>) itemJSONObj.get("read");
         List<User> readUserList = new ArrayList<>();
@@ -265,16 +270,17 @@ public class SocketHandler {
      */
     @OnEvent("getHistoryMessages")
     public void getHistoryMessages(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) {
+
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String conversationId = itemJSONObj.getString("conversationId");
+        logger.info("socket:getHistoryMessages:"+conversationId);
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
-        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,-1);
+        List<Message> res =  messageService.getMoreMessage(conversationId,offset-1,limit,-1);
 //        List<Message> res = messageService.findAllConversationMessage(conversationId);
         JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data", res.stream().map(Message::show).toArray(JSONObject[]::new));
-        logger.info("getHistoryMessages\n");
         for (JSONObject each : jsonObjects) {
             logger.info(each.toJSONString());
         }
@@ -296,14 +302,14 @@ public class SocketHandler {
     public void getSystemMessages(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) {
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String conversationId = itemJSONObj.getString("conversationId");
+        logger.info("socket:getSystemMessages:"+conversationId);
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
-        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,-1);
+        List<Message> res =  messageService.getMoreMessage(conversationId,offset-1,limit,-1);
 //        List<Message> res = messageService.findAllConversationMessage(conversationId);
         JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data", res.stream().map(Message::show).toArray(JSONObject[]::new));
-        logger.info("getSystemMessages\n");
         for (JSONObject each : jsonObjects) {
             logger.info(each.toJSONString());
         }
@@ -335,9 +341,10 @@ public class SocketHandler {
     @OnEvent("agreeValidate")
     public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
+        logger.info("socket:agreeValidate");
         logger.info(itemJSONObj.toJSONString());
         String state = itemJSONObj.getString("state");
-        String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        String name = itemJSONObj.getString("name");
         String conversationId = itemJSONObj.getString("conversationId");//这个是发送者与echat的会话
         if (state.equals("group")) {
             String groupName = itemJSONObj.getString("groupName");
@@ -385,7 +392,7 @@ public class SocketHandler {
                 org_message.setUserM(user);
                 org_message.setConversationId(groupId.toString());
                 messageRepository.save(org_message);
-                socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org", org_message);
+                socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org", org_message.show());
             }
         }
     /*
@@ -472,13 +479,14 @@ public class SocketHandler {
 
     @OnEvent("refuseValidate")
     public void refuseValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
+        logger.info("socket:refuseValidate");
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
-        String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        String name = itemJSONObj.getString("name");
         String conversationId = userMId+"-"+ConstValue.ECHAT_ID;
         //将申请信息设为已读
         User userM = userRepository.getOne(userMId);
-        String userYName = EncodeUtil.toUTF8(itemJSONObj.getString("userYname"));
+        String userYName = itemJSONObj.getString("userYname");
         User userY = userRepository.findByUserName(userYName);
         List<Message> messages = messageRepository.findMessageByConversationIdAndUserM(conversationId, userM);
         for (Message message : messages) {
@@ -498,7 +506,7 @@ public class SocketHandler {
             refuse_message.setUserM(userY);
             refuse_message.setConversationId(conversationId);
             messageRepository.save(refuse_message);
-            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", refuse_message);
+            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", refuse_message.show());
 
         } else if (state.equals("friend")) {
             Message refuse_message = new Message();
@@ -509,16 +517,17 @@ public class SocketHandler {
             refuse_message.setUserM(userY);
             refuse_message.setConversationId(conversationId);
             messageRepository.save(refuse_message);
-            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", refuse_message);
+            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", refuse_message.show());
         }
     }
 
 
     @OnEvent("setReadStatus")
     public void setReadStatus(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
+        logger.info("socket:setReadStatus");
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         logger.info(toJSONString(messageDto));
-        String userName = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+        String userName = itemJSONObj.getString("name");
         User user = userRepository.findByUserName(userName);
         String conversationId = itemJSONObj.getString("conversationId");
         List<Message> messages = messageService.findAllConversationMessage(conversationId);
@@ -578,10 +587,11 @@ sendValidate（加群申请）
  */
     @OnEvent("sendValidate")
     public void sendValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
+        logger.info("socket:sendValidate");
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         Message message = new Message();
         String state = itemJSONObj.getString("state");
-        String mes = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
+        String mes = itemJSONObj.getString("mes");
         String conversationId = itemJSONObj.getString("conversationId");
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         User userM = userRepository.getOne(userMId);
@@ -608,11 +618,12 @@ sendValidate（加群申请）
         message1.setConversationId(userMAndSystemConversationId);
         messageRepository.save(message);
         messageRepository.save(message1);
-        socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", message);
+        socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", message.show());
     }
 
     @OnEvent("disconnect")
     public void disconnect(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) {
+        logger.info("socket:disconnect");
         UUID uuid = socketIOClient.getSessionId();
         while (clientMap.values().remove(uuid)) ;
         socketIOServer.getBroadcastOperations().sendEvent("leaved", clientMap);

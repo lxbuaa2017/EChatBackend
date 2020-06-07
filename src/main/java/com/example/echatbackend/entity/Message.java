@@ -38,9 +38,9 @@ public class Message {
     private String message = "";
 
 
-    private String style;  // mess 常规消息 emoji 表情包 img 图片 file 文件 ...
+    private String style = "mess";  // mess 常规消息 emoji 表情包 img 图片 file 文件 ...
 
-    private String state; //group friend
+    private String state = "friend"; //group friend
 
     private String type; // validate
 
