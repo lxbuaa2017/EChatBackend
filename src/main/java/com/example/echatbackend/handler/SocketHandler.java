@@ -236,13 +236,14 @@ public class SocketHandler {
             readUserList.add(userRepository.findByUserName(name));
         }
 //        Long time = (Long) itemJSONObj.get("time");
-        String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
+//        String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
+        String message = itemJSONObj.getString("mes");
         String messageType = itemJSONObj.getString("style");
         User userM = userRepository.findByUserName(userName);
         Message messageObj = new Message(userM, conversationId, readUserList, message, messageType);
         logger.info(messageObj.toString());
         messageRepository.save(messageObj);
-        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", messageDto);
+        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", messageObj.show());
     }
 
     /*
@@ -433,7 +434,7 @@ public class SocketHandler {
 
             //通知申请人已同意
             Message agree_message = new Message();
-            agree_message.setMessage(userYName + " 向 "+name+" 发送的的好友申请已通过");
+            agree_message.setMessage(userYName + " 向 "+name+" 发送的好友申请已通过");
             agree_message.setStatus("1");
             agree_message.setState("friend");
             agree_message.setType("info");

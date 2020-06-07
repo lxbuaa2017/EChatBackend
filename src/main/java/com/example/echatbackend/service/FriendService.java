@@ -1,8 +1,10 @@
 package com.example.echatbackend.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.dao.ConversationRepository;
 import com.example.echatbackend.dao.FriendRepository;
 import com.example.echatbackend.dao.UserRepository;
+import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Friend;
 import com.example.echatbackend.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +20,13 @@ public class FriendService {
 
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
-
+    private final ConversationRepository conversationRepository;
     @Autowired
-    public FriendService(FriendRepository friendRepository, UserRepository userRepository) {
+    public FriendService(FriendRepository friendRepository, UserRepository userRepository
+    , ConversationRepository conversationRepository) {
         this.friendRepository = friendRepository;
         this.userRepository = userRepository;
+        this.conversationRepository = conversationRepository;
     }
 
     public JSONObject findFriend(User user) {
@@ -48,6 +52,7 @@ public class FriendService {
 
     public boolean deleteFriend(User user, int friendId) {
         Optional<User> optionalUser = userRepository.findById(friendId);
+        int myId = user.getId();
         if (optionalUser.isEmpty()) {
             return false;
         }
@@ -57,6 +62,14 @@ public class FriendService {
             friendRelationship = friendRepository.findByUserMAndUserY(optionalUser.get(), user);
         }
         if (friendRelationship != null) {
+            String conversationId = myId<friendId?(myId+"-"+friendId):(friendId+"-"+myId);
+            Conversation conversation = conversationRepository.findByConversationId(conversationId);
+            User friend = optionalUser.get();
+            user.getConversationList().remove(conversation);
+            friend.getConversationList().remove(conversation);
+            conversationRepository.delete(conversation);
+            userRepository.save(user);
+            userRepository.save(friend);
             friendRepository.delete(friendRelationship);
             return true;
         } else {
