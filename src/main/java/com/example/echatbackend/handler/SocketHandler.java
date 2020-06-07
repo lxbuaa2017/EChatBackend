@@ -273,8 +273,16 @@ public class SocketHandler {
         String conversationId = itemJSONObj.getString("conversationId");
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
-        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,1);
-        socketIOClient.sendEvent("getHistoryMessages",res);
+//        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,1);
+        List<Message> res =  messageService.findAllConversationMessage(conversationId);
+        JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("data",res.stream().map(Message::show).toArray(JSONObject[]::new));
+        logger.info("getHistoryMessages\n");
+        for(JSONObject each:jsonObjects){
+            logger.info(each.toJSONString());
+        }
+        socketIOClient.sendEvent("getHistoryMessages",jsonObject.get("data"));
     }
 
     /*
@@ -333,7 +341,7 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
     logger.info(itemJSONObj.toJSONString());
     String state = itemJSONObj.getString("state");
     String name= EncodeUtil.toUTF8(itemJSONObj.getString("name"));
-    String conversationId = itemJSONObj.getString("conversationId");
+    String conversationId = itemJSONObj.getString("conversationId");//这个是发送者与echat的会话
     if (state.equals("group")) {
         String groupName= itemJSONObj.getString("groupName");
         Integer userId = Integer.valueOf(itemJSONObj.getString("userM"));
@@ -365,7 +373,8 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
             messageRepository.save(agree_message);
             Conversation conversation = conversationRepository.findByConversationId(conversationId);
             List<User> userList = conversation.getUsers();//软复制
-            userList.add(user);
+            if(!userList.contains(user))
+                userList.add(user);
             conversationRepository.save(conversation);
             userM.getConversationList().add(conversation);
             userRepository.save(userM);
@@ -430,18 +439,20 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
         agree_message.setUserY(userY);
         agree_message.setConversationId(conversationId);
         messageRepository.save(agree_message);
-        Conversation conversation = new Conversation();
-        conversation.setConversationId(conversationId);
-        conversation.setType("friend");
-        conversation.getUsers().add(userM);
-        conversation.getUsers().add(userY);
-        conversationRepository.save(conversation);
-        userM.getConversationList().add(conversation);
-        userY.getConversationList().add(conversation);
-        userRepository.save(userM);
-        userRepository.save(userY);
-        socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",agree_message.show());
-        socketIOClient.sendEvent("ValidateSuccess","ok");
+        if(conversationRepository.findByConversationId(conversationId)==null){
+            Conversation conversation = new Conversation();
+            conversation.setConversationId(conversationId);
+            conversation.setType("friend");
+            conversation.getUsers().add(userM);
+            conversation.getUsers().add(userY);
+            conversationRepository.save(conversation);
+            userM.getConversationList().add(conversation);
+            userY.getConversationList().add(conversation);
+            userRepository.save(userM);
+            userRepository.save(userY);
+            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",agree_message.show());
+            socketIOClient.sendEvent("ValidateSuccess","ok");
+        }
     }
     }
 
@@ -558,7 +569,7 @@ sendValidate（加群申请）
         Message message = new Message();
         String state = itemJSONObj.getString("state");
         String mes = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
-        String conversationId = itemJSONObj.getString("conversationId");
+        String conversationId = itemJSONObj.getString("conversationId");//发送者与系统会话的id
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         User userM = userRepository.getOne(userMId);
         message.setState(state);
