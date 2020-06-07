@@ -31,7 +31,7 @@ public class Conversation {
 
     public JSONObject show(int userId) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id", id);
+        jsonObject.put("id", conversationId);
         jsonObject.put("type", type);
         if (type.equals("group")) {
             jsonObject.put("name", group.getName());
