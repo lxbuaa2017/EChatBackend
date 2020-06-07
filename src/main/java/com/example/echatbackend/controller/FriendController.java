@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.FriendService;
 import com.example.echatbackend.service.TokenService;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -60,10 +59,13 @@ public class FriendController extends BaseController {
     }
 
     //删除好友
-    @DeleteMapping("/friend/deleteMyfriend")
+    @PostMapping("/friend/deleteMyfriend")
     public ResponseEntity<Object> deleteMyfriend(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
-        int friendId = Integer.parseInt(request.getString("userid"));
+        Integer friendId = request.getInteger("userid");
+        if (friendId == null) {
+            return requestFail(-1, "参数错误");
+        }
         int res = friendService.deleteFriend(user, friendId);
         if (res == -1)
             return requestFail(-1, "fail to delete a friend");
@@ -71,5 +73,3 @@ public class FriendController extends BaseController {
             return requestSuccess(0);
     }
 }
-
-

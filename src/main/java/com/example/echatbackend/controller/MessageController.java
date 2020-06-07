@@ -3,10 +3,12 @@ package com.example.echatbackend.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.example.echatbackend.entity.Message;
 import com.example.echatbackend.service.MessageService;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -23,8 +25,9 @@ public class MessageController extends BaseController {
 
 
     // 删除信息
-    @DeleteMapping("/mes/removeMessage")
-    public ResponseEntity<Object> removeMessage(Integer id) {
+    @PostMapping("/mes/removeMessage")
+    public ResponseEntity<Object> removeMessage(@RequestBody JSONObject request) {
+        Integer id = request.getInteger("id");
         if (id == null) {
             return requestFail(-1, "参数错误");
         }

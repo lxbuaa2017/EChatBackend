@@ -51,8 +51,6 @@ public class FriendService {
     //fail: -1  success: 0
     public int deleteFriend(User thisUser, int friendId) {
         User friend = userRepository.findById(friendId).get();
-        if (friend == null)
-            return -1;
         Friend friendRelationship;
         if (thisUser.getId() < friendId)
             friendRelationship = friendRepository.findByUserMAndUserY(thisUser, friend);
