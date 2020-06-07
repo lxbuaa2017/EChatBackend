@@ -272,8 +272,16 @@ public class SocketHandler {
         String conversationId = itemJSONObj.getString("conversationId");
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
-        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,1);
-        socketIOClient.sendEvent("getHistoryMessages",res);
+//        List<Message> res =  messageService.getMoreMessage(conversationId,offset,limit,1);
+        List<Message> res = messageService.findAllConversationMessage(conversationId);
+        JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("data", res.stream().map(Message::show).toArray(JSONObject[]::new));
+        logger.info("getHistoryMessages\n");
+        for (JSONObject each : jsonObjects) {
+            logger.info(each.toJSONString());
+        }
+        socketIOClient.sendEvent("getHistoryMessages", jsonObject.get("data"));
     }
 
     /*
@@ -331,8 +339,8 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
     JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
     logger.info(itemJSONObj.toJSONString());
     String state = itemJSONObj.getString("state");
-    String name= EncodeUtil.toUTF8(itemJSONObj.getString("name"));
-    String conversationId = itemJSONObj.getString("conversationId");
+    String name = EncodeUtil.toUTF8(itemJSONObj.getString("name"));
+    String conversationId = itemJSONObj.getString("conversationId");//这个是发送者与echat的会话
     if (state.equals("group")) {
         String groupName= itemJSONObj.getString("groupName");
         Integer userId = Integer.valueOf(itemJSONObj.getString("userM"));
@@ -355,7 +363,7 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
 
             //通知申请人已同意
             Message agree_message = new Message();
-            agree_message.setMessage("加入"+groupName+"的申请已通过");
+            agree_message.setMessage("加入" + groupName + "的申请已通过");
             agree_message.setStatus("1");
             agree_message.setState("group");
             agree_message.setType("info");
@@ -364,11 +372,12 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
             messageRepository.save(agree_message);
             Conversation conversation = conversationRepository.findByConversationId(conversationId);
             List<User> userList = conversation.getUsers();//软复制
-            userList.add(user);
+            if (!userList.contains(user))
+                userList.add(user);
             conversationRepository.save(conversation);
             userM.getConversationList().add(conversation);
             userRepository.save(userM);
-            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",agree_message);
+            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", agree_message);
             //通知群聊有新人加入
             Message org_message = new Message();
             org_message.setType("org");
@@ -401,8 +410,8 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
 }
 
      */
-        else if(state.equals("friend")){
-            //如果已经是好友，就不处理。否则就加入好友列表
+    else if(state.equals("friend")){
+        //如果已经是好友，就不处理。否则就加入好友列表
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         Integer userYId = Integer.valueOf(itemJSONObj.getString("userY"));
         String userYName = itemJSONObj.getString("userYname");
@@ -414,14 +423,14 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
         User userM = userRepository.findByUserName(name);
         User userY = userRepository.findByUserName(userYName);
         List<Message> messages = messageRepository.findMessageByConversationIdAndUserM(conversationId,userM);
-       for(Message message:messages){
-           message.setStatus("1");
-           messageRepository.save(message);
-       }
+        for(Message message:messages){
+            message.setStatus("1");
+            messageRepository.save(message);
+        }
 
         //通知申请人已同意
         Message agree_message = new Message();
-        agree_message.setMessage(userYName+"的好友申请已通过");
+        agree_message.setMessage(userYName + "的好友申请已通过");
         agree_message.setStatus("1");
         agree_message.setState("friend");
         agree_message.setType("info");
@@ -429,20 +438,22 @@ public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, 
         agree_message.setUserY(userY);
         agree_message.setConversationId(conversationId);
         messageRepository.save(agree_message);
-        Conversation conversation = new Conversation();
-        conversation.setConversationId(conversationId);
-        conversation.setType("friend");
-        conversation.getUsers().add(userM);
-        conversation.getUsers().add(userY);
-        conversationRepository.save(conversation);
-        userM.getConversationList().add(conversation);
-        userY.getConversationList().add(conversation);
-        userRepository.save(userM);
-        userRepository.save(userY);
-        socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate",agree_message.show());
-        socketIOClient.sendEvent("ValidateSuccess","ok");
+        if (conversationRepository.findByConversationId(conversationId) == null) {
+            Conversation conversation = new Conversation();
+            conversation.setConversationId(conversationId);
+            conversation.setType("friend");
+            conversation.getUsers().add(userM);
+            conversation.getUsers().add(userY);
+            conversationRepository.save(conversation);
+            userM.getConversationList().add(conversation);
+            userY.getConversationList().add(conversation);
+            userRepository.save(userM);
+            userRepository.save(userY);
+            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", agree_message.show());
+            socketIOClient.sendEvent("ValidateSuccess", "ok");
+        }
     }
-    }
+}
 
 
     @OnEvent("refuseValidate")
@@ -557,7 +568,7 @@ sendValidate（加群申请）
         Message message = new Message();
         String state = itemJSONObj.getString("state");
         String mes = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
-        String conversationId = itemJSONObj.getString("conversationId");
+        String conversationId = itemJSONObj.getString("conversationId");//发送者与系统会话的id
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         User userM = userRepository.getOne(userMId);
         message.setState(state);

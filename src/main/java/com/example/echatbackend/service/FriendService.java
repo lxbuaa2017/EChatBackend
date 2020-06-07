@@ -8,6 +8,11 @@ import com.example.echatbackend.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 public class FriendService {
 
@@ -22,24 +27,30 @@ public class FriendService {
 
 
     public JSONObject findFriend(int userId) {
-        //1.看看这个人是不是好友
-        //2.如果是，去user里面把他找出来
+        User user = userRepository.findById(userId).get();
+        List<Friend> friend1 = friendRepository.findAllByUserM(user);
+        List<Friend> friend2 = friendRepository.findAllByUserY(user);
+        //            groupUsers.stream().map(GroupUser::getUser).toArray(User[]::new);
 
-        if (friendRepository.existsById(userId)) {
+        Set<User> friends = friend1.stream().map(Friend::getUserY).collect(Collectors.toSet());
+        List<User> users2 = friend2.stream().map(Friend::getUserM).collect(Collectors.toList());
+        friends.addAll(users2);
+//            friends.addAll(friend2.stream().map(Friend::getUserM).collect(Collectors.toSet()));
+        friends.remove(user);
+        List<JSONObject> data = new ArrayList<>();
+        for (User each : friends) {
             JSONObject jsonobject = new JSONObject();
-            Friend friend = friendRepository.findById(userId).get();
-            User user = userRepository.findById(userId).get();
-            if (friend == null || user == null)
-                return null;
-            jsonobject.put("createDate", friend.getCreateDate());
-            jsonobject.put("nickname", user.getNickname());
-            jsonobject.put("avatar", user.getAvatar());
-            jsonobject.put("signature", user);
-            jsonobject.put("id", user.getId());
-            jsonobject.put("gender", user.getGender());
-            return jsonobject;
-        } else
-            return null;
+            jsonobject.put("nickname", each.getNickname());
+            jsonobject.put("avatar", each.getAvatar());
+            jsonobject.put("signature", each.getSignature());
+            jsonobject.put("id", each.getId());
+            jsonobject.put("gender", each.getGender());
+            data.add(jsonobject);
+        }
+        JSONObject res = new JSONObject();
+        res.put("code", 0);
+        res.put("data", data);
+        return res;
     }
 
     public boolean checkFriend(int userYid, int userMid) {

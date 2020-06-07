@@ -1,12 +1,10 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Group;
 import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.*;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -14,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 
 @CrossOrigin
@@ -154,7 +153,14 @@ public class UserController extends BaseController {
             if (friend == null) {
                 return requestFail(-1, "用户不存在");
             }
-            conversation = conversationService.addConversation("friend");
+            List<User> userList = new ArrayList<>();
+            userList.add(user);
+            userList.add(friend);
+            conversation = conversationService.addConversation("friend", null, userList);
+            /*
+            todo
+             记得加上conversationId
+             */
             user.getConversationList().add(conversation);
             return requestSuccess();
         } else if (type.equals("group")) {
@@ -162,7 +168,11 @@ public class UserController extends BaseController {
             if (group == null) {
                 return requestFail(-1, "群组不存在");
             }
-            conversation = conversationService.addConversation("group");
+            conversation = conversationService.addConversation("group", group, null);
+                        /*
+            todo
+             记得加上conversationId
+             */
             user.getConversationList().add(conversation);
             return requestSuccess();
         } else {
