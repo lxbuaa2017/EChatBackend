@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static com.alibaba.fastjson.JSON.toJSONString;
 
@@ -527,21 +528,33 @@ public class SocketHandler {
 
     @OnEvent("setReadStatus")
     public void setReadStatus(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
+        long startTime = System.currentTimeMillis();    //获取开始时间//放在所测的代码上面
         logger.info("socket:setReadStatus");
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         logger.info(toJSONString(messageDto));
         String userName = itemJSONObj.getString("name");
+
         User user = userRepository.findByUserName(userName);
+
         String conversationId = itemJSONObj.getString("conversationId");
         List<Message> messages = messageService.findAllConversationMessage(conversationId);
+
+        List<Message> updates = new ArrayList<>();
         for (Message message : messages) {
-            List<User> readList = message.getReadList();
-            if (!readList.contains(user)) {
+            Set<User> readList = message.getReadList();
+//            logger.info(readList.toString());
+//            logger.info(user.toString());
+            Set names = readList.stream().map(User::getUserName).collect(Collectors.toSet());
+            if (!names.contains(userName)) {
                 readList.add(user);
-                messageRepository.save(message);
+                updates.add(message);
             }
         }
+        messageRepository.saveAll(updates);
 
+        long endTime = System.currentTimeMillis();    //获取结束时间//放在所测的代码下面
+
+       logger.info("程序运行时间：" + (endTime - startTime) + "ms");    //输出程序运行时间
     }
 
     /*

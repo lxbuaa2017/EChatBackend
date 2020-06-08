@@ -50,6 +50,12 @@
                     socket.on('getHistoryMessages', (message)=> {
                         console.log(message)
                     })
+                    val = {
+                        conversationId: "1-2",
+                        name: "lx2020",
+                    };
+                    socket.emit('setReadStatus', val);
+
                 } else {
                     setTimeout(myAction.getData, 500);
                 }
