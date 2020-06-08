@@ -64,7 +64,10 @@ public class Message {
     }
 
 
-
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Integer getId(){
+        return this.id;
+    }
     public JSONObject show() {
         List<String> nameList = new ArrayList<>();
         for(User user:readList){

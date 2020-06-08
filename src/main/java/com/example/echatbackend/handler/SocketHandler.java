@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -73,6 +74,9 @@ public class SocketHandler {
      */
     private final SocketIOServer socketIOServer;
     private GroupUserRepository groupUserRepository;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     public static Map<String, UUID> getClientMap() {
         return clientMap;
@@ -218,39 +222,31 @@ public class SocketHandler {
     @OnEvent("mes")
     public void mes(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
        logger.info("socket:mes");
-        /*
-        mes
-        {
-            name: this.user.name, //发信人用户名
-            mes: this.message, //消息，string类型
-            time: utils.formatTime(new Date()),//发信时间
-            avatar: this.user.photo,//发信人头像
-            nickname: this.user.nickname,//发信人昵称
-            read: [this.user.name],//读过的人的姓名列表（不是id），发信时只有发信人读过
-            conversationId: this.currSation.id,//会话id
-            style: 'mess',//四种类型：'mess'/'emoji'/'img'/file
-            userM: this.user.id //发信人id
-        }
-
-         */
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String userName = itemJSONObj.getString("name");
         String conversationId = itemJSONObj.getString("conversationId");
-        List<String> readList = (List<String>) itemJSONObj.get("read");
         List<User> readUserList = new ArrayList<>();
-        for (String name : readList) {
-            readUserList.add(userRepository.findByUserName(name));
-        }
 //        String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
         String message = itemJSONObj.getString("mes");
         String messageType = itemJSONObj.getString("style");
         Long time = Long.valueOf(itemJSONObj.getString("time"));
         User userM = userRepository.findByUserName(userName);
+        readUserList.add(userM);
+        Integer userMId = userM.getId();
+        String[] ids = conversationId.split("-");
+        Integer userYId = userMId.equals(Integer.valueOf(ids[0])) ?Integer.valueOf(ids[1]):Integer.valueOf(ids[0]);
+        User userY = userRepository.findById(userYId).get();
+        String userYName = userY.getUserName();
+        if(clientMap.containsKey(userYName)&&stringRedisTemplate.opsForValue().get(userYName).equals(conversationId)){
+            readUserList.add(userY);
+        }
         Message messageObj = new Message(userM, conversationId, readUserList, message, messageType);
-        messageObj.setTime(time);
+        messageObj.setUserY(userY);
         logger.info(messageObj.toString());
+        messageRepository.saveAndFlush(messageObj);
+        messageObj.setTime(time);
         Message res = messageRepository.saveAndFlush(messageObj);
-        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", res.show());
+        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", messageObj.show());
         logger.info(itemJSONObj.getString("time"));
     }
 

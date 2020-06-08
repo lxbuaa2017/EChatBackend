@@ -1,14 +1,25 @@
 package com.example.echatbackend.service;
 
+import com.alibaba.fastjson.JSONObject;
+import com.corundumstudio.socketio.AckRequest;
+import com.corundumstudio.socketio.SocketIOClient;
 import com.example.echatbackend.dao.*;
 import com.example.echatbackend.entity.Message;
+import com.example.echatbackend.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.alibaba.fastjson.JSON.toJSONString;
 
 @Service
 public class MessageService extends BaseService<Message, Integer, MessageRepository> {
@@ -46,5 +57,20 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
 
     public List<Message> findAllConversationMessage(String conversationId) {
         return messageRepository.findAllByConversationId(conversationId);
+    }
+
+    public void setReadStatus(User user,String conversationId) throws UnsupportedEncodingException {
+        List<Message> messages = findAllConversationMessage(conversationId);
+        String userName = user.getUserName();
+        List<Message> updates = new ArrayList<>();
+        for (Message message : messages) {
+            Set<User> readList = message.getReadList();
+            Set names = readList.stream().map(User::getUserName).collect(Collectors.toSet());
+            if (!names.contains(userName)) {
+                readList.add(user);
+                updates.add(message);
+            }
+        }
+        messageRepository.saveAll(updates);
     }
 }
