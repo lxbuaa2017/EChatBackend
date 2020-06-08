@@ -273,7 +273,8 @@ public class SocketHandler {
      */
     @OnEvent("getHistoryMessages")
     public void getHistoryMessages(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) {
-
+        socketIOClient.sendEvent("getHistoryMessages", "测试");
+        logger.info("测试1234");
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String conversationId = itemJSONObj.getString("conversationId");
         logger.info("socket:getHistoryMessages:"+conversationId);
