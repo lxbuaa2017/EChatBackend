@@ -282,12 +282,10 @@ public class SocketHandler {
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
         List<Message> res =  messageService.getMoreMessage(conversationId,offset-1,limit,-1);
 //        List<Message> res = messageService.findAllConversationMessage(conversationId);
-        JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
+//        JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data", res.stream().map(Message::show).toArray(JSONObject[]::new));
-        for (JSONObject each : jsonObjects) {
-            logger.info(each.toJSONString());
-        }
+
         jsonObject.put("conversationId",conversationId);
         socketIOClient.sendEvent("getHistoryMessages", jsonObject);
     }

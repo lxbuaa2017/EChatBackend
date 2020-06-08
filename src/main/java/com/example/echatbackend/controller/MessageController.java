@@ -5,10 +5,7 @@ import com.example.echatbackend.entity.Message;
 import com.example.echatbackend.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -36,17 +33,15 @@ public class MessageController extends BaseController {
     }
 
     // 加载更多消息
-    @PostMapping("/mes/getMoreMessage")
-    public ResponseEntity<Object> loadMoreMessages(@RequestBody JSONObject request) {
-        String conversationId = request.getString("conversationId");
-        Integer offset = request.getInteger("offset");
-        Integer limit = request.getInteger("limit");
+    @GetMapping("/mes/getMoreMessage")
+    public ResponseEntity<Object> loadMoreMessages(@RequestParam String conversationId,@RequestParam Integer offset,@RequestParam Integer limit) {
         if (conversationId == null || offset == null || limit == null) {
             return requestFail(-1, "参数错误");
         }
         List<Message> messageList = messageService.getMoreMessage(conversationId, offset -1, limit,-1);
-        JSONObject response = new JSONObject();
-        response.put("data", messageList.stream().map(Message::show).toArray(JSONObject[]::new));
-        return requestSuccess(response);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("data", messageList.stream().map(Message::show).toArray(JSONObject[]::new));
+        jsonObject.put("conversationId",conversationId);
+        return requestSuccess(jsonObject);
     }
 }
