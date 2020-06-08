@@ -240,15 +240,17 @@ public class SocketHandler {
         for (String name : readList) {
             readUserList.add(userRepository.findByUserName(name));
         }
-//        Long time = (Long) itemJSONObj.get("time");
 //        String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
         String message = itemJSONObj.getString("mes");
         String messageType = itemJSONObj.getString("style");
+        Long time = Long.valueOf(itemJSONObj.getString("time"));
         User userM = userRepository.findByUserName(userName);
         Message messageObj = new Message(userM, conversationId, readUserList, message, messageType);
+        messageObj.setTime(time);
         logger.info(messageObj.toString());
-        Message res = messageRepository.save(messageObj);
+        Message res = messageRepository.saveAndFlush(messageObj);
         socketIOServer.getRoomOperations(conversationId).sendEvent("mes", res.show());
+        logger.info(itemJSONObj.getString("time"));
     }
 
     /*
@@ -284,7 +286,8 @@ public class SocketHandler {
         for (JSONObject each : jsonObjects) {
             logger.info(each.toJSONString());
         }
-        socketIOClient.sendEvent("getHistoryMessages", jsonObject.get("data"));
+        jsonObject.put("conversationId",conversationId);
+        socketIOClient.sendEvent("getHistoryMessages", jsonObject);
     }
 
     /*
