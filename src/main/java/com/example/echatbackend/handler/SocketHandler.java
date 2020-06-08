@@ -247,8 +247,8 @@ public class SocketHandler {
         User userM = userRepository.findByUserName(userName);
         Message messageObj = new Message(userM, conversationId, readUserList, message, messageType);
         logger.info(messageObj.toString());
-        messageRepository.save(messageObj);
-        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", messageObj.show());
+        Message res = messageRepository.save(messageObj);
+        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", res.show());
     }
 
     /*
