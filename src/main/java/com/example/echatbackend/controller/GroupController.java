@@ -160,4 +160,15 @@ public class GroupController extends BaseController {
         response.put("data", group.show());
         return requestSuccess(response);
     }
+
+    //判断当前用户是否加入群聊
+    @GetMapping("/group/checkIfInGroup")
+    public ResponseEntity<Object> checkIfInGroup(@RequestParam Integer groupId){
+        User user = tokenService.getCurrentUser();
+        Group group = groupService.findGroupById(groupId);
+        boolean res = groupUserService.checkIfInGroup(group,user);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isMygroup", res);
+        return requestSuccess(jsonObject);
+    }
 }
