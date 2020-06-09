@@ -104,7 +104,7 @@ public class GroupController extends BaseController {
 
     // 查找群内成员
     @GetMapping("/group/getGroupUser")
-    public ResponseEntity<Object> getGroupUser(Integer id, String keyword) {
+    public ResponseEntity<Object> getGroupUser(@RequestParam  Integer id) {
         /*res
             [{
             userId: number//用户id
@@ -115,7 +115,7 @@ public class GroupController extends BaseController {
             {…
             }]
         */
-        if (id == null || keyword == null) {
+        if (id == null) {
             return requestFail(-1, "参数错误");
         }
         Group group = groupService.findGroupById(id);
