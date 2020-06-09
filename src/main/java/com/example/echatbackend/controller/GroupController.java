@@ -41,7 +41,7 @@ public class GroupController extends BaseController {
         group.setDescription(groupDesc);
         group.setAvatar(groupImage);
         group.setUser(user);
-        groupService.saveAndFlush(group);
+        group = groupService.saveAndFlush(group);
         JSONObject response = new JSONObject();
         response.put("id", group.getId());
         return requestSuccess(response);

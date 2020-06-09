@@ -248,9 +248,9 @@ public class SocketHandler {
         //此处看着冗余但有必要
         messageRepository.saveAndFlush(messageObj);
         messageObj.setTime(time);
-        messageRepository.saveAndFlush(messageObj);
+        messageObj = messageRepository.saveAndFlush(messageObj);
 
-        logger.info(response.toJSONString());
+        logger.info(messageObj.toString());
 
     }
 
