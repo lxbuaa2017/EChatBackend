@@ -620,7 +620,7 @@ sendValidate（加群申请）
             Integer groupId = Integer.valueOf(itemJSONObj.getString("groupId"));
             Group group = groupService.findGroupById(groupId);
             message.setGroup(group);
-            Integer holderId = group.getUser().getId();
+//            Integer holderId = group.getUser().getId();
         } else if (state.equals("friend")) {
             Integer userYId = Integer.valueOf(itemJSONObj.getString("userY"));
             User userY = userRepository.getOne(userYId);

@@ -1,6 +1,7 @@
 package com.example.echatbackend.entity;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.handler.SocketHandler;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -75,6 +76,7 @@ public class User {
     @Column(nullable = false, columnDefinition = "char(32)")
     private String salt;
 
+
     @Setter
     @ManyToMany(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
@@ -115,4 +117,14 @@ public class User {
         return jsonObject;
     }
 
+    public JSONObject showWithOnlineStatus() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", id);
+        jsonObject.put("nickname", nickname);
+        jsonObject.put("avatar", avatar);
+        jsonObject.put("signature", signature);
+        jsonObject.put("gender", gender);
+        jsonObject.put("online", SocketHandler.getClientMap().containsKey(userName));
+        return jsonObject;
+    }
 }

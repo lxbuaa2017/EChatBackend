@@ -124,7 +124,7 @@ public class GroupController extends BaseController {
         }
         User[] users = groupService.findUserByGroup(group);
         JSONObject response = new JSONObject();
-        response.put("data", Arrays.stream(users).map(User::show).toArray(JSONObject[]::new));
+        response.put("data", Arrays.stream(users).map(User::showWithOnlineStatus).toArray(JSONObject[]::new));
         return requestSuccess(response);
     }
 
