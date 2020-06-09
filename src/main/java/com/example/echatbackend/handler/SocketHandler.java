@@ -242,12 +242,16 @@ public class SocketHandler {
         }
         Message messageObj = new Message(userM, conversationId, readUserList, message, messageType);
         messageObj.setUserY(userY);
-        logger.info(messageObj.toString());
+        JSONObject response = messageObj.show();
+        response.put("time",time);
+        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", response);
+        //此处看着冗余但有必要
         messageRepository.saveAndFlush(messageObj);
         messageObj.setTime(time);
-        Message res = messageRepository.saveAndFlush(messageObj);
-        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", messageObj.show());
-        logger.info(itemJSONObj.getString("time"));
+        messageRepository.saveAndFlush(messageObj);
+
+        logger.info(response.toJSONString());
+
     }
 
     /*

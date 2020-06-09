@@ -60,6 +60,7 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
     }
 
     public void setReadStatus(User user,String conversationId) throws UnsupportedEncodingException {
+        System.out.println("setReadStatus:"+user.getUserName());
         List<Message> messages = findAllConversationMessage(conversationId);
         String userName = user.getUserName();
         List<Message> updates = new ArrayList<>();
@@ -71,6 +72,7 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
                 updates.add(message);
             }
         }
-        messageRepository.saveAll(updates);
+        if(updates.size()>0)
+         messageRepository.saveAll(updates);
     }
 }
