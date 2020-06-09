@@ -1,15 +1,18 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.dao.ConversationRepository;
+import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Group;
+import com.example.echatbackend.entity.GroupUser;
 import com.example.echatbackend.entity.User;
-import com.example.echatbackend.service.GroupService;
-import com.example.echatbackend.service.TokenService;
+import com.example.echatbackend.service.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,11 +22,18 @@ public class GroupController extends BaseController {
 
     private final GroupService groupService;
     private final TokenService tokenService;
-
+    private final ConversationService  conversationService;
+    private final UserService userService;
+    private final GroupUserService groupUserService;
     @Autowired
-    public GroupController(GroupService groupService, TokenService tokenService) {
+    public GroupController(GroupService groupService, TokenService tokenService,
+                           ConversationService conversationService,UserService userService
+        ,GroupUserService groupUserService) {
         this.groupService = groupService;
         this.tokenService = tokenService;
+        this.conversationService=conversationService;
+        this.userService = userService;
+        this.groupUserService = groupUserService;
     }
 
     // 创建群
@@ -42,6 +52,20 @@ public class GroupController extends BaseController {
         group.setAvatar(groupImage);
         group.setUser(user);
         group = groupService.saveAndFlush(group);
+        Conversation conversation = new Conversation();
+        conversation.setGroup(group);
+        conversation.setConversationId(group.getId().toString());
+        conversation.setType("group");
+        List<User> userList = new ArrayList<>();
+        userList.add(user);
+        conversation.setUsers(userList);
+        conversation = conversationService.saveAndFlush(conversation);
+        user.getConversationList().add(conversation);
+        userService.saveAndFlush(user);
+        group.setConversation(conversation);
+        groupService.saveAndFlush(group);
+        GroupUser groupUser = new GroupUser(group,user,true,"");
+        groupUserService.saveAndFlush(groupUser);
         JSONObject response = new JSONObject();
         response.put("id", group.getId());
         return requestSuccess(response);

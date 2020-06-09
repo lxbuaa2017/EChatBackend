@@ -242,15 +242,14 @@ public class SocketHandler {
         }
         Message messageObj = new Message(userM, conversationId, readUserList, message, messageType);
         messageObj.setUserY(userY);
-        JSONObject response = messageObj.show();
-        response.put("time",time);
-        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", response);
-        //此处看着冗余但有必要
-        messageRepository.saveAndFlush(messageObj);
-        messageObj.setTime(time);
-        messageObj = messageRepository.saveAndFlush(messageObj);
 
-        logger.info(messageObj.toString());
+        //此处看着冗余但有必要
+//        messageRepository.saveAndFlush(messageObj);
+//        messageObj.setTime(time);
+        messageObj = messageRepository.saveAndFlush(messageObj);
+        JSONObject response = messageObj.show();
+        socketIOServer.getRoomOperations(conversationId).sendEvent("mes", response);
+        logger.info(response.toString());
 
     }
 
@@ -358,7 +357,7 @@ public class SocketHandler {
             } else {
                 Group group = groupService.findGroupById(groupId);
                 User user = userRepository.findById(userId).get();
-                GroupUser groupUser = new GroupUser(group, user, false, false, group.getDescription());
+                GroupUser groupUser = new GroupUser(group, user, false, group.getDescription());
                 groupUserRepository.save(groupUser);
                 logger.info(name + " 已经成功加入群 " + groupId.toString());
                 //将申请信息设为已读

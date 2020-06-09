@@ -18,8 +18,6 @@ public class GroupUser {
     @OneToOne
     private User user;  // 群成员
 
-    @Setter
-    private Boolean isManager;  // 是否为管理员1是0否
 
     @Setter
     private Boolean isHolder;  // 是否为群主1是0否
@@ -30,11 +28,10 @@ public class GroupUser {
     public GroupUser() {
     }
 
-    public GroupUser(Group group, User user, Boolean isManager, Boolean isHolder, String card) {
+    public GroupUser(Group group, User user, Boolean isHolder, String card) {
         this.group = group;
         this.user = user;
         this.isHolder = isHolder;
-        this.isManager = isManager;
         this.card = card;
     }
 }

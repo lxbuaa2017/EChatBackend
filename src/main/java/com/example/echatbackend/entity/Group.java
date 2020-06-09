@@ -1,13 +1,14 @@
 package com.example.echatbackend.entity;
 
 import com.alibaba.fastjson.JSONObject;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
-@Getter
+@Data
 @Table(name = "tb_group")
 public class Group {
 
@@ -30,8 +31,8 @@ public class Group {
     @Setter
     private Integer userNum;  // 群成员数量，避免某些情况需要多次联表查找，如搜索；所以每次加入一人，数量加一
 
-    @Column(nullable = false, unique = true)
-    private Integer code;  // 群账号
+//    @Column(unique = true)
+//    private Integer code;  // 群账号
 
     @OneToOne
     @Setter
