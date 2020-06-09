@@ -258,6 +258,7 @@ public class SocketHandler {
                 }
             }
             messageObj = new Message(userM, conversationId, readUserList, message, messageType);
+            messageObj.setState("group");
             messageObj.setGroup(group);
         }
 
@@ -407,6 +408,9 @@ public class SocketHandler {
                 Message org_message = new Message();
                 org_message.setType("org");
                 org_message.setUserM(user);
+                org_message.setGroup(group);
+                org_message.setMessage(name+" 加入了群聊！");
+                org_message.setState("group");
                 org_message.setConversationId(groupId.toString());
                 org_message = messageService.saveAndFlush(org_message);
                 socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org", org_message.show());
@@ -643,14 +647,14 @@ sendValidate（加群申请）
             message.setConversationId(conversationId);
         }
 
-        userMAndSystemConversationId = userMId+"-"+ ConstValue.ECHAT_ID;
-        Message message1 =new Message();
-        BeanUtils.copyProperties(message,message1);
-        message1.setConversationId(userMAndSystemConversationId);
+//        userMAndSystemConversationId = userMId+"-"+ ConstValue.ECHAT_ID;
+//        Message message1 =new Message();
+//        BeanUtils.copyProperties(message,message1);
+//        message1.setConversationId(userMAndSystemConversationId);
+//        message1 = messageService.saveAndFlush(message1);
         message = messageService.saveAndFlush(message);
-        message1 = messageService.saveAndFlush(message1);
         socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", message.show());
-        socketIOServer.getRoomOperations(userMAndSystemConversationId).sendEvent("takeValidate", message1.show());
+//        socketIOServer.getRoomOperations(userMAndSystemConversationId).sendEvent("takeValidate", message1.show());
     }
 
     @OnEvent("disconnect")

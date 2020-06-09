@@ -63,16 +63,20 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
         System.out.println("setReadStatus:"+user.getUserName());
         List<Message> messages = findAllConversationMessage(conversationId);
         String userName = user.getUserName();
-        List<Message> updates = new ArrayList<>();
         for (Message message : messages) {
             Set<User> readList = message.getReadList();
-            Set names = readList.stream().map(User::getUserName).collect(Collectors.toSet());
-            if (!names.contains(userName)) {
+            Set<String> names = readList.stream().map(User::getUserName).collect(Collectors.toSet());
+            boolean contains = false;
+            for(String each:names){
+                if(each.equals(userName)){
+                    contains = true;
+                    break;
+                }
+            }
+            if (contains) {
                 readList.add(user);
-                updates.add(message);
+                messageRepository.saveAndFlush(message);
             }
         }
-        if(updates.size()>0)
-         messageRepository.saveAll(updates);
     }
 }

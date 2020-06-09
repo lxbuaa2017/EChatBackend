@@ -76,21 +76,25 @@ public class Message {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id",id);
         jsonObject.put("userM", userM.getId());
+        jsonObject.put("avatar", userM.getAvatar());
+        jsonObject.put("name", userM.getUserName());
+        jsonObject.put("nickname", userM.getNickname());
         if(userY!=null)
         jsonObject.put("userY", userY.getId());
         if(group!=null)
             jsonObject.put("groupId", group.getId());
+        if(group!=null)
+            jsonObject.put("groupName", group.getName());
+        if(group!=null)
+            jsonObject.put("groupPhoto", group.getAvatar());
         jsonObject.put("mes", message);
         jsonObject.put("state", state);
         jsonObject.put("type", type);
         jsonObject.put("time", time);
-        jsonObject.put("avatar", userM.getAvatar());
         jsonObject.put("style", style);
         jsonObject.put("status", status);
         jsonObject.put("read", nameList);
         jsonObject.put("conversationId", conversationId);
-        jsonObject.put("name", userM.getUserName());
-        jsonObject.put("nickname", userM.getNickname());
         return jsonObject;
     }
 
