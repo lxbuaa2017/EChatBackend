@@ -81,6 +81,8 @@ public class GroupController extends BaseController {
         }*/
     }
 
+
+
     // 查找我的群
     @GetMapping("/group/getMyGroup")
     public ResponseEntity<Object> getMyGroup() {
@@ -147,6 +149,15 @@ public class GroupController extends BaseController {
         }
         JSONObject response = new JSONObject();
         response.put("data", groupList.stream().map(Group::show).toArray());
+        return requestSuccess(response);
+    }
+
+    //根据id获取群信息
+    @GetMapping("/group/getGroupInfo")
+    public ResponseEntity<Object> getGroupInfo(@RequestParam Integer groupId){
+        Group group = groupService.findGroupById(groupId);
+        JSONObject response = new JSONObject();
+        response.put("data", group.show());
         return requestSuccess(response);
     }
 }
