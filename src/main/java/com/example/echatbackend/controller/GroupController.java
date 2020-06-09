@@ -31,7 +31,7 @@ public class GroupController extends BaseController {
     public ResponseEntity<Object> createGroup(@RequestBody JSONObject request) {
         String groupName = request.getString("groupName");
         String groupDesc = request.getString("groupDesc");
-        String groupImage = request.getString("groupImage");
+        String groupImage = request.getString("groupAvatar");
         User user = tokenService.getCurrentUser();
         if (groupName == null || groupDesc == null || groupImage == null) {
             return requestFail(-1, "参数错误");
