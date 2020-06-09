@@ -71,4 +71,9 @@ public class GroupService extends BaseService<Group, Integer, GroupRepository> {
         }
         return judge;
     }
+
+   /*
+   todo
+   加群（把SocketHandler里的搬过来，优化代码）
+    */
 }

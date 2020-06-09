@@ -12,10 +12,7 @@ import com.example.echatbackend.dao.GroupUserRepository;
 import com.example.echatbackend.dao.MessageRepository;
 import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.*;
-import com.example.echatbackend.service.ConversationService;
-import com.example.echatbackend.service.FriendService;
-import com.example.echatbackend.service.GroupService;
-import com.example.echatbackend.service.MessageService;
+import com.example.echatbackend.service.*;
 import com.example.echatbackend.util.BeanUtils;
 import com.example.echatbackend.util.ConstValue;
 import com.example.echatbackend.util.EncodeUtil;
@@ -69,6 +66,8 @@ public class SocketHandler {
     private GroupService groupService;
 
     private FriendService friendService;
+
+    private UserService userService;
     /**
      * socketIOServer
      */
@@ -87,7 +86,7 @@ public class SocketHandler {
     public SocketHandler(SocketIOServer socketIOServer, MessageRepository messageRepository, UserRepository userRepository,
                          ConversationRepository conversationRepository, ConversationService conversationService,
                          MessageService messageService, GroupService groupService, GroupUserRepository groupUserRepository
-            , FriendService friendService) {
+            , FriendService friendService,UserService userService) {
         this.socketIOServer = socketIOServer;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
@@ -97,6 +96,7 @@ public class SocketHandler {
         this.groupService = groupService;
         this.groupUserRepository = groupUserRepository;
         this.friendService = friendService;
+        this.userService =userService;
     }
 
     /**
@@ -229,24 +229,42 @@ public class SocketHandler {
 //        String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
         String message = itemJSONObj.getString("mes");
         String messageType = itemJSONObj.getString("style");
-        Long time = Long.valueOf(itemJSONObj.getString("time"));
-        User userM = userRepository.findByUserName(userName);
+//        Long time = Long.valueOf(itemJSONObj.getString("time"));
+        User userM = userService.findUserByName(userName);
         readUserList.add(userM);
         Integer userMId = userM.getId();
-        String[] ids = conversationId.split("-");
-        Integer userYId = userMId.equals(Integer.valueOf(ids[0])) ?Integer.valueOf(ids[1]):Integer.valueOf(ids[0]);
-        User userY = userRepository.findById(userYId).get();
-        String userYName = userY.getUserName();
-        if(clientMap.containsKey(userYName)&&stringRedisTemplate.opsForValue().get(userYName).equals(conversationId)){
-            readUserList.add(userY);
+        Message messageObj;
+        if(conversationId.contains("-")){ //单聊
+            String[] ids = conversationId.split("-");
+            Integer userYId = userMId.equals(Integer.valueOf(ids[0])) ?Integer.valueOf(ids[1]):Integer.valueOf(ids[0]);
+            User userY = userService.findById(userYId).get();
+            String userYName = userY.getUserName();
+            if(clientMap.containsKey(userYName)&&stringRedisTemplate.opsForValue().get(userYName).equals(conversationId)){
+                readUserList.add(userY);
+            }
+            messageObj = new Message(userM, conversationId, readUserList, message, messageType);
+            messageObj.setUserY(userY);
         }
-        Message messageObj = new Message(userM, conversationId, readUserList, message, messageType);
-        messageObj.setUserY(userY);
+        else {
+            int groupId = Integer.parseInt(conversationId);
+            Group group = groupService.findGroupById(groupId);
+            User[] groupUsers = groupService.findUserByGroup(group);
+            for(User userY:groupUsers){
+                if(userY.getId().equals(userMId))
+                    continue;
+                String userYName = userY.getUserName();
+                if(clientMap.containsKey(userYName)&&stringRedisTemplate.opsForValue().get(userYName).equals(conversationId)){
+                    readUserList.add(userY);
+                }
+            }
+            messageObj = new Message(userM, conversationId, readUserList, message, messageType);
+            messageObj.setGroup(group);
+        }
 
         //此处看着冗余但有必要
 //        messageRepository.saveAndFlush(messageObj);
 //        messageObj.setTime(time);
-        messageObj = messageRepository.saveAndFlush(messageObj);
+        messageObj = messageService.saveAndFlush(messageObj);
         JSONObject response = messageObj.show();
         socketIOServer.getRoomOperations(conversationId).sendEvent("mes", response);
         logger.info(response.toString());
@@ -347,7 +365,10 @@ public class SocketHandler {
         logger.info(itemJSONObj.toJSONString());
         String state = itemJSONObj.getString("state");
         String name = itemJSONObj.getString("name");
-        String conversationId = itemJSONObj.getString("conversationId");//这个是发送者与echat的会话
+        //获取消息id
+        Integer id = itemJSONObj.getInteger("id");
+        Message applyMessage = messageService.findById(id).get();
+//        String conversationId = itemJSONObj.getString("conversationId");//这个是发送者与echat的会话
         if (state.equals("group")) {
             String groupName = itemJSONObj.getString("groupName");
             Integer userId = Integer.valueOf(itemJSONObj.getString("userM"));
@@ -357,43 +378,37 @@ public class SocketHandler {
             } else {
                 Group group = groupService.findGroupById(groupId);
                 User user = userRepository.findById(userId).get();
+
                 GroupUser groupUser = new GroupUser(group, user, false, group.getDescription());
+                Conversation conversation = group.getConversation();
+                conversation.getUsers().add(user);
+                user.getConversationList().add(conversation);
                 groupUserRepository.save(groupUser);
+                conversationRepository.save(conversation);
+                userRepository.save(user);
                 logger.info(name + " 已经成功加入群 " + groupId.toString());
                 //将申请信息设为已读
-                User userM = userRepository.findByUserName(name);
-                List<Message> message = messageRepository.findMessageByConversationIdAndUserM(conversationId, userM);
-                for (Message each : message) {
-                    each.setStatus("1");
-                    messageRepository.save(each);
-                }
+                applyMessage.setStatus("1");
+                messageService.saveAndFlush(applyMessage);
 
                 //通知申请人已同意
-                Message agree_message = new Message();
-                agree_message.setMessage("加入" + groupName + "的申请已通过");
-                agree_message.setStatus("1");
-                agree_message.setState("group");
-                agree_message.setType("info");
-                agree_message.setUserM(user);
-                agree_message.setConversationId(conversationId);
-                messageRepository.save(agree_message);
-
-                Conversation conversation = conversationRepository.findByConversationId(groupId.toString());
-                List<User> userList = conversation.getUsers();//软复制
-                if (!userList.contains(user))
-                    userList.add(user);
-                conversationRepository.save(conversation);
-                userM.getConversationList().add(conversation);
-                userRepository.save(userM);
-
-                socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", agree_message.show());
+                Message agreeMessage = new Message();
+                agreeMessage.setMessage("加入" + groupName + "的申请已通过");
+                agreeMessage.setStatus("1");
+                agreeMessage.setState("group");
+                agreeMessage.setType("info");
+                agreeMessage.setUserY(group.getUser());
+                agreeMessage.setUserM(user);
+                agreeMessage.setConversationId(userId.toString()+"-"+ConstValue.ECHAT_ID);
+                agreeMessage = messageService.saveAndFlush(agreeMessage);
+                socketIOServer.getRoomOperations(userId.toString()+"-"+ConstValue.ECHAT_ID).sendEvent("takeValidate", agreeMessage.show());
 
                 //通知群聊有新人加入
                 Message org_message = new Message();
                 org_message.setType("org");
                 org_message.setUserM(user);
                 org_message.setConversationId(groupId.toString());
-                messageRepository.save(org_message);
+                org_message = messageService.saveAndFlush(org_message);
                 socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org", org_message.show());
             }
         }
@@ -435,27 +450,24 @@ public class SocketHandler {
             //将申请信息设为已读
             User userM = userRepository.findByUserName(name);
             User userY = userRepository.findByUserName(userYName);
-            List<Message> messages = messageRepository.findMessageByConversationIdAndUserM(conversationId, userM);
-            for (Message message : messages) {
-                message.setStatus("1");
-                messageRepository.save(message);
-            }
-
+            applyMessage.setStatus("1");
+            messageService.saveAndFlush(applyMessage);
             //通知申请人已同意
             Message agree_message = new Message();
-            agree_message.setMessage( name+ " 向 "+userYName+" 发送的好友申请已通过");
+            agree_message.setMessage( "你向 "+userYName+" 发送的好友申请已通过");
             agree_message.setStatus("1");
             agree_message.setState("friend");
             agree_message.setType("info");
             agree_message.setUserM(userM);
             agree_message.setUserY(userY);
-            agree_message.setConversationId(conversationId);
-            Message agree_message1 = new Message();
-            BeanUtils.copyProperties(agree_message,agree_message1);
-            agree_message1.setId(null);
-            agree_message1.setConversationId(userMId+"-"+ConstValue.ECHAT_ID);
-            messageRepository.save(agree_message);
-            messageRepository.save(agree_message1);
+            agree_message.setConversationId(userMId+"-"+ConstValue.ECHAT_ID);
+//            Message agree_message1 = new Message();
+//            BeanUtils.copyProperties(agree_message,agree_message1);
+//            agree_message1.setId(null);
+//            agree_message1.setConversationId(userMId+"-"+ConstValue.ECHAT_ID);
+            agree_message = messageService.saveAndFlush(agree_message);
+//            messageRepository.save(agree_message1);
+            String conversationId = "";
             if(userMId<userYId){
                 conversationId = userMId+"-"+userYId;
             }
@@ -606,7 +618,6 @@ sendValidate（加群申请）
         Message message = new Message();
         String state = itemJSONObj.getString("state");
         String mes = itemJSONObj.getString("mes");
-        String conversationId = itemJSONObj.getString("conversationId");
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         User userM = userRepository.getOne(userMId);
         message.setState(state);
@@ -614,25 +625,32 @@ sendValidate（加群申请）
         message.setType("validate");
         message.setStatus("0");
         message.setMessage(mes);
-        message.setConversationId(conversationId);
+        String conversationId = "";
+
         String userMAndSystemConversationId = "";
         if (state.equals("group")) {
             Integer groupId = Integer.valueOf(itemJSONObj.getString("groupId"));
             Group group = groupService.findGroupById(groupId);
+            conversationId = group.getUser().getId().toString()+"-"+ConstValue.ECHAT_ID;
             message.setGroup(group);
-//            Integer holderId = group.getUser().getId();
+            message.setUserY(group.getUser());
+            message.setConversationId(conversationId);
         } else if (state.equals("friend")) {
             Integer userYId = Integer.valueOf(itemJSONObj.getString("userY"));
-            User userY = userRepository.getOne(userYId);
+            User userY = userRepository.findById(userYId).get();
+            conversationId = userYId+"-"+ConstValue.ECHAT_ID;
             message.setUserY(userY);
+            message.setConversationId(conversationId);
         }
+
         userMAndSystemConversationId = userMId+"-"+ ConstValue.ECHAT_ID;
         Message message1 =new Message();
         BeanUtils.copyProperties(message,message1);
         message1.setConversationId(userMAndSystemConversationId);
-        messageRepository.save(message);
-        messageRepository.save(message1);
+        message = messageService.saveAndFlush(message);
+        message1 = messageService.saveAndFlush(message1);
         socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", message.show());
+        socketIOServer.getRoomOperations(userMAndSystemConversationId).sendEvent("takeValidate", message1.show());
     }
 
     @OnEvent("disconnect")

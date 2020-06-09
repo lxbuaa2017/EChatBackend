@@ -74,6 +74,7 @@ public class Message {
             nameList.add(user.getUserName());
         }
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id",id);
         jsonObject.put("userM", userM.getId());
         if(userY!=null)
         jsonObject.put("userY", userY.getId());
