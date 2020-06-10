@@ -44,25 +44,7 @@ public class MessageController extends BaseController {
         return requestSuccess();
     }
 
-    // 切换窗口，加载更多消息
-    @GetMapping("/mes/getMoreMessage")
-    public ResponseEntity<Object> getMoreMessages(@RequestParam String conversationId,@RequestParam Integer offset,@RequestParam Integer limit) throws UnsupportedEncodingException {
-        User user = tokenService.getCurrentUser();
-        stringRedisTemplate.opsForValue().set(user.getUserName(),conversationId);
 
-
-        if (offset == null || limit == null) {
-            return requestFail(-1, "参数错误");
-        }
-        List<Message> messageList = messageService.getMoreMessage(conversationId, offset -1, limit,-1);
-        ArrayList<Message> messages = new ArrayList<>(messageList);
-        Collections.reverse(messages);
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("data", messages.stream().map(Message::show).toArray(JSONObject[]::new));
-        jsonObject.put("conversationId",conversationId);
-        messageService.setReadStatus(user,conversationId);
-        return requestSuccess(jsonObject);
-    }
 
     // 当前窗口，加载更多消息
     @GetMapping("/mes/loadMoreMessage")

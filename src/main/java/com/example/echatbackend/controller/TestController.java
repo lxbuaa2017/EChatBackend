@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,5 +68,13 @@ public class TestController extends BaseController {
         jsonObject.put("data", messageList.stream().map(Message::show).toArray(JSONObject[]::new));
         jsonObject.put("conversationId",conversationId);
         return requestSuccess(jsonObject);
+    }
+
+    // 切换窗口
+    @GetMapping("/test/setConversation")
+    public ResponseEntity<Object> getMoreMessages() throws UnsupportedEncodingException {
+        User user = userRepository.findByUserName("lx2020");
+        messageService.setReadStatus(user,"123");
+        return requestSuccess(0);
     }
 }

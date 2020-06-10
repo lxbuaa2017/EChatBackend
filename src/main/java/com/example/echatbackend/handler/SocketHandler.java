@@ -82,7 +82,7 @@ public class SocketHandler {
     }
 
     /*
-    todo  去掉所有repository，抽取service，简化本文件
+    todo  去掉所有repository，抽取service，简化本文件.
      */
     @Autowired
     public SocketHandler(SocketIOServer socketIOServer, MessageRepository messageRepository, UserRepository userRepository,
@@ -261,35 +261,15 @@ todo 可能得做点事情
 
     }
 
-    /*
-        socket.on('getHistoryMessages', (pramas) => { // 获取历史消息
-        apiList.getHistoryMessages(pramas, 1, (res) => { // 1 正序
-            if (res.code === 0) {
-                socket.emit('getHistoryMessages', res.data); // 发送给发送者（当前客户端）
-            } else {
-                console.log('查询历史记录失败');
-            }
-        });
-    });
 
-    {
-    conversationId: v.id,  //会话的id
-    offset: 1,  //页，从1开始计数
-    limit: 200 //每页的记录上限
-}
-     */
     @OnEvent("getHistoryMessages")
     public void getHistoryMessages(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) {
-//        socketIOClient.sendEvent("getHistoryMessages", "测试");
-//        logger.info("测试1234");
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         String conversationId = itemJSONObj.getString("conversationId");
         logger.info("socket:getHistoryMessages:"+conversationId);
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
         List<Message> res =  messageService.getMoreMessage(conversationId,offset-1,limit,-1);
-//        List<Message> res = messageService.findAllConversationMessage(conversationId);
-//        JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data", res.stream().map(Message::show).toArray(JSONObject[]::new));
 
@@ -297,17 +277,8 @@ todo 可能得做点事情
         socketIOClient.sendEvent("getHistoryMessages", jsonObject);
     }
 
-    /*
-        socket.on('getSystemMessages', (pramas) => { // 获取历史消息
-        apiList.getHistoryMessages(pramas, -1, (res) => { // -1 倒序
-            if (res.code === 0) {
-                socket.emit('getSystemMessages', res.data); // 发送给发送者（当前客户端）
-            } else {
-                console.log('查询vchat历史记录失败');
-            }
-        });
-    });
-     */
+
+
     @OnEvent("getSystemMessages")
     public void getSystemMessages(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) {
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
@@ -316,7 +287,6 @@ todo 可能得做点事情
         int offset = Integer.parseInt(itemJSONObj.getString("offset"));
         int limit = Integer.parseInt(itemJSONObj.getString("limit"));
         List<Message> res =  messageService.getMoreMessage(conversationId,offset-1,limit,-1);
-//        List<Message> res = messageService.findAllConversationMessage(conversationId);
         JSONObject[] jsonObjects = res.stream().map(Message::show).toArray(JSONObject[]::new);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data", res.stream().map(Message::show).toArray(JSONObject[]::new));
@@ -327,27 +297,7 @@ todo 可能得做点事情
 
     }
 
-    /*
-    sendValidate（加群申请）
-    {
-      name: this.user.name, //发信人用户名
-      mes: this.introduce, //发信人介绍
-      time: utils.formatTime(new Date()), //发信时间
-      avatar: this.user.photo, //发信头像
-      nickname: this.user.nickname, //发信人昵称
-      signature: this.user.signature, //发信人签名
-      groupName: group.groupName, //群名
-      groupId: group.groupId, //群id
-      groupPhoto: group.groupPhoto, //群头像
-      userM: this.user.id, // 申请人id
-      read: [], //已读人id列表
-     conversationId: this.$route.params.id + '-' + this.Vchat.id.split('-')[1],
-      state: 'group',
-      type: 'validate',
-      status: '0'
-    }
 
-     */
     @OnEvent("agreeValidate")
     public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
@@ -358,7 +308,6 @@ todo 可能得做点事情
         //获取消息id
         Integer id = itemJSONObj.getInteger("id");
         Message applyMessage = messageService.findById(id).get();
-//        String conversationId = itemJSONObj.getString("conversationId");//这个是发送者与echat的会话
         if (state.equals("group")) {
             String groupName = itemJSONObj.getString("groupName");
             Integer userId = Integer.valueOf(itemJSONObj.getString("userM"));
@@ -405,29 +354,7 @@ todo 可能得做点事情
                 socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org", org_message.show());
             }
         }
-    /*
-    sendValidate（好友申请）
-{
-    name: this.user.name, //发信人用户名
-    mes: this.introduce, //发信人介绍
-    time: utils.formatTime(new Date()), //发信时间
-    avatar: this.user.photo, //发信人头像
-    nickname: this.user.nickname, //发信人昵称
-    signature: this.user.signature, //发信人签名
-    read: [], //已读人id列表
-    userM: this.user.id, //发信人id
-    userY: this.$route.params.id, //对方的id
-    userYname: friend.userYname, //对方的昵称
-    userYphoto: friend.userYphoto, //对方的照片
-    userYloginName: friend.userYloginName, //对方的登录名
-    friendRoom : this.user.id + '-' + this.$route.params.id, //这次发信的会话id
-    conversationId: this.$route.params.id + '-' + this.Vchat.id.split('-')[1], //这次发信的会话id，上面friendroom颠倒一下
-    state: 'friend',
-    type: 'validate',
-    status: '0'
-}
 
-     */
         else if (state.equals("friend")) {
             //如果已经是好友，就不处理。否则就加入好友列表
             int userMId = Integer.parseInt(itemJSONObj.getString("userM"));
@@ -484,6 +411,9 @@ todo 可能得做点事情
     }
 
 
+    /*
+    todo 此处未经验证。此外删好友，删群聊也没验证。
+     */
     @OnEvent("refuseValidate")
     public void refuseValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         logger.info("socket:refuseValidate");
@@ -560,50 +490,6 @@ todo 可能得做点事情
        logger.info("程序运行时间：" + (endTime - startTime) + "ms");    //输出程序运行时间
     }
 
-    /*
-    sendValidate（好友申请）
-    {
-        name: this.user.name, //发信人用户名
-        mes: this.introduce, //发信人介绍
-        time: utils.formatTime(new Date()), //发信时间
-        avatar: this.user.photo, //发信人头像
-        nickname: this.user.nickname, //发信人昵称
-        signature: this.user.signature, //发信人签名
-        read: [], //已读人id列表
-        userM: this.user.id, //发信人id
-        userY: this.$route.params.id, //对方的id
-        userYname: friend.userYname, //对方的昵称
-        userYphoto: friend.userYphoto, //对方的照片
-        userYloginName: friend.userYloginName, //对方的登录名
-        friendRoom : this.user.id + '-' + this.$route.params.id, //这次发信的会话id
-        conversationId: this.$route.params.id + '-' + this.Vchat.id.split('-')[1], //这次发信的会话id，上面friendroom颠倒一下
-        state: 'friend',
-        type: 'validate',
-        status: '0'
-    }
-
-     */
-/*
-sendValidate（加群申请）
-{
-  name: this.user.name, //发信人用户名
-  mes: this.introduce, //发信人介绍
-  time: utils.formatTime(new Date()), //发信时间
-  avatar: this.user.photo, //发信头像
-  nickname: this.user.nickname, //发信人昵称
-  signature: this.user.signature, //发信人签名
-  groupName: group.groupName, //群名
-  groupId: group.groupId, //群id
-  groupPhoto: group.groupPhoto, //群头像
-  userM: this.user.id, // 申请人id
-  read: [], //已读人id列表
- conversationId: this.$route.params.id + '-' + this.Vchat.id.split('-')[1],
-  state: 'group',
-  type: 'validate',
-  status: '0'
-}
-
- */
     @OnEvent("sendValidate")
     public void sendValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         logger.info("socket:sendValidate");

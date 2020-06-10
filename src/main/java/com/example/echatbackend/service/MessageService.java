@@ -58,22 +58,24 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
     public List<Message> findAllConversationMessage(String conversationId) {
         return messageRepository.findAllByConversationId(conversationId);
     }
-
+/*
+todo 每次都对所有消息进行检查，效率过低。是否考虑设个效率高点的机制？
+ */
     public void setReadStatus(User user,String conversationId) throws UnsupportedEncodingException {
         System.out.println("setReadStatus:"+user.getUserName());
         List<Message> messages = findAllConversationMessage(conversationId);
-        String userName = user.getUserName();
+        Integer userId = user.getId();
         for (Message message : messages) {
             Set<User> readList = message.getReadList();
-            Set<String> names = readList.stream().map(User::getUserName).collect(Collectors.toSet());
+            Set<Integer> ids = readList.stream().map(User::getId).collect(Collectors.toSet());
             boolean contains = false;
-            for(String each:names){
-                if(each.equals(userName)){
+            for(Integer each:ids){
+                if(each.equals(userId)){
                     contains = true;
                     break;
                 }
             }
-            if (contains) {
+            if (!contains) {
                 readList.add(user);
                 messageRepository.saveAndFlush(message);
             }

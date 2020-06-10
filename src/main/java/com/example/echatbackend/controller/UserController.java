@@ -7,11 +7,13 @@ import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,17 +27,22 @@ public class UserController extends BaseController {
     private final TokenService tokenService;
     private final UserService userService;
     private final EmailCaptchaService emailCaptchaService;
-
+    private final MessageService messageService;
+    private StringRedisTemplate stringRedisTemplate;
     @Autowired
     public UserController(CaptchaService captchaService, ConversationService conversationService,
                           GroupService groupService, TokenService tokenService,
-                          UserService userService, EmailCaptchaService emailCaptchaService) {
+                          UserService userService, EmailCaptchaService emailCaptchaService,MessageService messageService,
+                          StringRedisTemplate stringRedisTemplate) {
         this.captchaService = captchaService;
         this.conversationService = conversationService;
         this.groupService = groupService;
         this.tokenService = tokenService;
         this.userService = userService;
         this.emailCaptchaService = emailCaptchaService;
+        this.messageService=messageService;
+        this.stringRedisTemplate=stringRedisTemplate;
+
     }
 
 
@@ -333,6 +340,15 @@ public class UserController extends BaseController {
         User user = tokenService.getCurrentUser();
         user.setBgOpa(bgOpa);
         userService.save(user);
+        return requestSuccess(0);
+    }
+
+    // 切换窗口
+    @GetMapping("/user/setConversation")
+    public ResponseEntity<Object> getMoreMessages(@RequestParam String conversationId) throws UnsupportedEncodingException {
+        User user = tokenService.getCurrentUser();
+        stringRedisTemplate.opsForValue().set(user.getUserName(),conversationId);
+        messageService.setReadStatus(user,conversationId);
         return requestSuccess(0);
     }
 }
