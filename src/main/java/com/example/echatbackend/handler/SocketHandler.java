@@ -81,7 +81,9 @@ public class SocketHandler {
         return clientMap;
     }
 
-    //规范化的话还是把repository都写到service去
+    /*
+    todo  去掉所有repository，抽取service，简化本文件
+     */
     @Autowired
     public SocketHandler(SocketIOServer socketIOServer, MessageRepository messageRepository, UserRepository userRepository,
                          ConversationRepository conversationRepository, ConversationService conversationService,
@@ -130,27 +132,14 @@ public class SocketHandler {
                     userName, socketIOClient.getSessionId().toString(), socketIOClient.getRemoteAddress().toString());
             // 移除
             clientMap.remove(userName);
-            // 发送下线通知
-//            this.sendMsg(null, null,
-//                    "下线啦");
+/*
+todo 可能得做点事情
+ */
         }
     }
 
 
-    /*
-        socket.on('join', (val) => {
-        // if (OnlineUser[val.name]) {
-        //     console.log('yijiaru', val.name);
-        //     return;
-        // }
-        socket.join(val.roomid, () => {
-            console.log('加入了', val.name);
-            OnlineUser[val.name] = socket.id;
-            io.in(val.roomid).emit('joined', OnlineUser); // 包括发送者
-            // console.log('join', val.roomid, OnlineUser);
-        });
-    });
-     */
+
     @OnEvent("join")
     public void join(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));

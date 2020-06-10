@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @CrossOrigin
@@ -41,11 +44,16 @@ public class TestController extends BaseController {
         return userService.findUserById(_id);
     }
 
-    @PostMapping("/test/getMoreMessage")
+    @GetMapping("/test/getMoreMessage")
     public ResponseEntity<Object> getMoreMessage() {
-        var messageList = messageService.getMoreMessage("1-3", 0, 10, 1);
+        long startTime = System.currentTimeMillis();    //获取结束时间//放在所测的代码下面
+        List<Message> messageList = messageService.getMoreMessage("1-2", 0, 40, -1);
+        ArrayList<Message> messages = new ArrayList<>(messageList);
+        Collections.reverse(messages);
         JSONObject response = new JSONObject();
-        response.put("data", messageList.stream().map(Message::show).toArray(JSONObject[]::new));
+        response.put("data", messages.stream().map(Message::show).toArray(JSONObject[]::new));
+        long endTime = System.currentTimeMillis();    //获取结束时间//放在所测的代码下面
+        response.put("running_time",endTime - startTime);
         return requestSuccess(response);
     }
 
