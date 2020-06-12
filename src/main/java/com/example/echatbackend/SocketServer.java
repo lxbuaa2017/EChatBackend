@@ -34,9 +34,9 @@ public class SocketServer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        logger.info("---------- NettySocket通知服务开始启动 ----------");
+        logger.info("---------- NettySocket服务开始启动 ----------");
         socketIOServer.start();
-        logger.info("---------- NettySocket通知服务启动成功 ----------");
+        logger.info("---------- NettySocket服务启动成功 ----------");
     }
 
 }

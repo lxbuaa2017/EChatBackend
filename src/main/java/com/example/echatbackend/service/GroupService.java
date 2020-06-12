@@ -71,7 +71,14 @@ public class GroupService extends BaseService<Group, Integer, GroupRepository> {
         }
         return judge;
     }
-
+//    public boolean deleteGroup(User user, int groupId) {
+//
+//        Optional<Group> optionalGroup = groupRepository.findById(groupId);
+//        int myId = user.getId();
+//        if (optionalGroup.isEmpty()) {
+//            return false;
+//        }
+//    }
    /*
    todo
    加群（把SocketHandler里的搬过来，优化代码）

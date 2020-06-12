@@ -1,7 +1,9 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.echatbackend.dao.ConversationRepository;
 import com.example.echatbackend.dao.UserRepository;
+import com.example.echatbackend.entity.Conversation;
 import com.example.echatbackend.entity.Message;
 import com.example.echatbackend.entity.User;
 import com.example.echatbackend.service.FriendService;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.EntityNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +31,9 @@ public class TestController extends BaseController {
     private MessageService messageService;
     @Autowired
     private FriendService friendService;
+
+    @Autowired
+    private ConversationRepository conversationRepository;
 
     @GetMapping("/test/getMyfriend")
     public ResponseEntity<Object> getMyfriends() {
@@ -76,5 +82,32 @@ public class TestController extends BaseController {
         User user = userRepository.findByUserName("lx2020");
         messageService.setReadStatus(user,"123");
         return requestSuccess(0);
+    }
+
+    @GetMapping("/test/removeConversation")
+    public ResponseEntity<Object> removeConversation() {
+        User user = userRepository.findByUserName("ghj2726");
+        Conversation conversation;
+        String id = "1-2";
+        if (id == null) {
+            return requestFail(-1, "参数错误");
+        }
+        try {
+            conversation = conversationRepository.findByConversationId(id);
+        } catch (EntityNotFoundException e) {
+            return requestFail(-1, "会话不存在");
+        }
+        List<Conversation> conversations = user.getConversationList();
+        conversations.removeIf(each -> each.getConversationId().equals(id));
+        userService.saveAndFlush(user);
+        return requestSuccess();
+        //过分判断会增加时延，前端已保证逻辑，无须判断
+//        List<Conversation> conversationList = user.getConversationList();
+//        if (conversationList.contains(conversation)) {
+//            conversationService.delete(conversation);
+//            return requestSuccess();
+//        } else {
+//            return requestFail(-1, "会话不存在");
+//        }
     }
 }

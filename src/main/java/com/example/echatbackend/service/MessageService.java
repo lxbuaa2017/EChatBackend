@@ -29,15 +29,17 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
     private final GroupUserRepository groupUserRepository;
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
-
+    private final LastReadTimeService lastReadTimeService;
     @Autowired
     public MessageService(ConversationRepository conversationRepository, FriendRepository friendRepository,
-                          GroupUserRepository groupUserRepository, UserRepository userRepository, MessageRepository messageRepository) {
+                          GroupUserRepository groupUserRepository, UserRepository userRepository, MessageRepository messageRepository
+    ,LastReadTimeService lastReadTimeService) {
         this.conversationRepository = conversationRepository;
         this.friendRepository = friendRepository;
         this.groupUserRepository = groupUserRepository;
         this.userRepository = userRepository;
         this.messageRepository = messageRepository;
+        this.lastReadTimeService = lastReadTimeService;
     }
 
     public void deleteMessage(int id) {
@@ -58,12 +60,17 @@ public class MessageService extends BaseService<Message, Integer, MessageReposit
     public List<Message> findAllConversationMessage(String conversationId) {
         return messageRepository.findAllByConversationId(conversationId);
     }
+    public List<Message> findAllConversationMessageByLastReadTime(String conversationId,Long time) {
+        return messageRepository.findAllByConversationIdAndTimeAfter(conversationId,time);
+    }
 /*
 todo 每次都对所有消息进行检查，效率过低。是否考虑设个效率高点的机制？
+解决：已设置LastReadTime机制
  */
     public void setReadStatus(User user,String conversationId) throws UnsupportedEncodingException {
+        Long lastReadTime = lastReadTimeService.getAndSetNewLastReadTime(conversationId,user.getId());
         System.out.println("setReadStatus:"+user.getUserName());
-        List<Message> messages = findAllConversationMessage(conversationId);
+        List<Message> messages = findAllConversationMessageByLastReadTime(conversationId,lastReadTime);
         Integer userId = user.getId();
         for (Message message : messages) {
             Set<User> readList = message.getReadList();

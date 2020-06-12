@@ -40,8 +40,13 @@ public class FriendController extends BaseController {
     //删除好友
     @PostMapping("/friend/deleteMyfriend")
     public ResponseEntity<Object> deleteMyfriend(@RequestBody JSONObject request) {
+        /*
+        1.删除Friend类
+        2.彼此会话列表删除对方的会话
+        3.删除会话本身
+         */
         User user = tokenService.getCurrentUser();
-        Integer friendId = request.getInteger("userid");
+        Integer friendId = request.getInteger("userId");
         if (friendId == null) {
             return requestFail(-1, "参数错误");
         }

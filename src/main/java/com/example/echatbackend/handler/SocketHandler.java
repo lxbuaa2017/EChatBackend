@@ -322,6 +322,7 @@ todo 可能得做点事情
                 Conversation conversation = group.getConversation();
                 conversation.getUsers().add(user);
                 user.getConversationList().add(conversation);
+
                 groupUserRepository.save(groupUser);
                 conversationRepository.save(conversation);
                 userRepository.save(user);
@@ -420,16 +421,15 @@ todo 可能得做点事情
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         Integer userMId = Integer.valueOf(itemJSONObj.getString("userM"));
         String name = itemJSONObj.getString("name");
-        String conversationId = userMId+"-"+ConstValue.ECHAT_ID;
+        String conversationId = itemJSONObj.getString("conversationId");
         //将申请信息设为已读
         User userM = userRepository.getOne(userMId);
         String userYName = itemJSONObj.getString("userYname");
         User userY = userRepository.findByUserName(userYName);
-        List<Message> messages = messageRepository.findMessageByConversationIdAndUserM(conversationId, userM);
-        for (Message message : messages) {
-            message.setStatus("2");//状态设为拒绝
-            messageRepository.save(message);
-        }
+        Integer id = itemJSONObj.getInteger("id");
+        Message message = messageService.findById(id).get();
+        message.setStatus("2");
+        message = messageService.saveAndFlush(message);
         String state = itemJSONObj.getString("state");
         if (state.equals("group")) {
             String groupName = itemJSONObj.getString("groupName");
@@ -441,9 +441,9 @@ todo 可能得做点事情
             refuse_message.setState("group");
             refuse_message.setType("info");
             refuse_message.setUserM(userY);
-            refuse_message.setConversationId(conversationId);
-            messageRepository.save(refuse_message);
-            socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", refuse_message.show());
+            refuse_message.setConversationId(userMId+"-"+ConstValue.ECHAT_ID);
+            refuse_message = messageService.saveAndFlush(refuse_message);
+            socketIOServer.getRoomOperations(userMId+"-"+ConstValue.ECHAT_ID).sendEvent("takeValidate", refuse_message.show());
 
         } else if (state.equals("friend")) {
             Message refuse_message = new Message();
@@ -452,8 +452,8 @@ todo 可能得做点事情
             refuse_message.setState("friend");
             refuse_message.setType("info");
             refuse_message.setUserM(userY);
-            refuse_message.setConversationId(conversationId);
-            messageRepository.save(refuse_message);
+            refuse_message.setConversationId(userMId+"-"+ConstValue.ECHAT_ID);
+            refuse_message = messageService.saveAndFlush(refuse_message);
             socketIOServer.getRoomOperations(conversationId).sendEvent("takeValidate", refuse_message.show());
         }
     }

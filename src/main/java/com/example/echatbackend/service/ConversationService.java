@@ -44,4 +44,7 @@ public class ConversationService extends BaseService<Conversation, Integer, Conv
         return onlineUsers;
     }
 
+    public Conversation findByConversationId(String conversationId){
+        return conversationRepository.findByConversationId(conversationId);
+    }
 }

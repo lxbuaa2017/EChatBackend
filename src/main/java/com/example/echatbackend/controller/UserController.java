@@ -149,39 +149,43 @@ public class UserController extends BaseController {
     @PostMapping("/user/addConversation")
     public ResponseEntity<Object> addConversation(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
+        Integer userMId = user.getId();
         Integer itemId = request.getInteger("itemId");
         if (itemId == null) {
             return requestFail(-1, "参数错误");
         }
         String type = request.getString("type");
         Conversation conversation;
+        String conversationId = "";
         if (type.equals("friend")) {
             User friend = userService.findUserById(itemId);
-            if (friend == null) {
-                return requestFail(-1, "用户不存在");
-            }
-            List<User> userList = new ArrayList<>();
-            userList.add(user);
-            userList.add(friend);
-            conversation = conversationService.addConversation("friend", null, userList);
-            /*
-            todo
-             记得加上conversationId
-             */
+            conversationId = userMId<itemId?userMId+"-"+itemId:itemId+"-"+userMId;
+            conversation = conversationService.findByConversationId(conversationId);
             user.getConversationList().add(conversation);
-            return requestSuccess();
+            userService.saveAndFlush(user);
+            JSONObject data = new JSONObject();
+            data.put("name",friend.getUserName());
+            data.put("avatar",friend.getAvatar());
+            data.put("id",conversationId);
+            data.put("itemId",itemId);
+            data.put("type",type);
+            JSONObject res = new JSONObject();
+            res.put("data",data);
+            return requestSuccess(res);
         } else if (type.equals("group")) {
+            conversation = conversationService.findByConversationId(itemId.toString());
             Group group = groupService.findGroupById(itemId);
-            if (group == null) {
-                return requestFail(-1, "群组不存在");
-            }
-            conversation = conversationService.addConversation("group", group, null);
-                        /*
-            todo
-             记得加上conversationId
-             */
             user.getConversationList().add(conversation);
-            return requestSuccess();
+            userService.saveAndFlush(user);
+            JSONObject data = new JSONObject();
+            data.put("name",group.getName());
+            data.put("avatar",group.getAvatar());
+            data.put("id",itemId.toString());
+            data.put("itemId",itemId);
+            data.put("type",type);
+            JSONObject res = new JSONObject();
+            res.put("data",data);
+            return requestSuccess(res);
         } else {
             return requestFail(-1, "参数错误");
         }
@@ -191,22 +195,27 @@ public class UserController extends BaseController {
     public ResponseEntity<Object> removeConversation(@RequestBody JSONObject request) {
         User user = tokenService.getCurrentUser();
         Conversation conversation;
-        Integer id = request.getInteger("id");
+        String id = request.getString("id");
         if (id == null) {
             return requestFail(-1, "参数错误");
         }
-        try {
-            conversation = conversationService.getOne(id);
-        } catch (EntityNotFoundException e) {
-            return requestFail(-1, "会话不存在");
-        }
-        List<Conversation> conversationList = user.getConversationList();
-        if (conversationList.contains(conversation)) {
-            conversationService.delete(conversation);
-            return requestSuccess();
-        } else {
-            return requestFail(-1, "会话不存在");
-        }
+//        try {
+//            conversation = conversationService.findByConversationId(id);
+//        } catch (EntityNotFoundException e) {
+//            return requestFail(-1, "会话不存在");
+//        }
+        List<Conversation> conversations = user.getConversationList();
+        conversations.removeIf(each -> each.getConversationId().equals(id));
+        userService.saveAndFlush(user);
+        return requestSuccess();
+        //过分判断会增加时延，前端已保证逻辑，无须判断
+//        List<Conversation> conversationList = user.getConversationList();
+//        if (conversationList.contains(conversation)) {
+//            conversationService.delete(conversation);
+//            return requestSuccess();
+//        } else {
+//            return requestFail(-1, "会话不存在");
+//        }
     }
 
     @GetMapping("/user/logout")
