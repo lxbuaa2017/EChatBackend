@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.*;
 import java.util.*;
@@ -13,6 +14,7 @@ import java.util.*;
 @Entity
 @Data
 @EntityListeners(AuditingEntityListener.class)
+@Transactional
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -75,6 +77,7 @@ public class Message {
         }
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id",id);
+        User userM = this.getUserM();
         jsonObject.put("userM", userM.getId());
         jsonObject.put("avatar", userM.getAvatar());
         jsonObject.put("name", userM.getUserName());
@@ -97,5 +100,4 @@ public class Message {
         jsonObject.put("conversationId", conversationId);
         return jsonObject;
     }
-
 }

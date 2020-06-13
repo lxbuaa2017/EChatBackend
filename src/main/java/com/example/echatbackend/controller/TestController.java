@@ -1,6 +1,9 @@
 package com.example.echatbackend.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.corundumstudio.socketio.AckRequest;
+import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.annotation.OnEvent;
 import com.example.echatbackend.dao.ConversationRepository;
 import com.example.echatbackend.dao.UserRepository;
 import com.example.echatbackend.entity.Conversation;
@@ -109,5 +112,30 @@ public class TestController extends BaseController {
 //        } else {
 //            return requestFail(-1, "会话不存在");
 //        }
+    }
+
+    @GetMapping("/test/deleteMyFriend")
+    public ResponseEntity<Object> deleteMyfriend() {
+        /*
+        1.删除Friend类
+        2.彼此会话列表删除对方的会话
+        3.删除会话本身
+         */
+        User user = userRepository.findByUserName("lx2020");
+        Integer friendId = 2;
+
+        JSONObject info = new JSONObject();
+        info.put("type","friend");
+        info.put("itemId",friendId);
+        ResponseEntity<Object> res ;
+        if (friendService.deleteFriend(user, friendId)) {
+            res =  requestSuccess(info);
+        } else {
+            res = requestFail(-1, "删除失败，好友不存在");
+        }
+        return res;
+//        User friend = userService.findUserById(friendId);
+//        String friendName = friend.getUserName();
+//        socketIOServer.getClient(clientMap.get(friendName)).sendEvent("beDeleted",res);
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,5 +17,6 @@ public interface MessageRepository extends JpaRepository<Message, Integer>, JpaS
     List<Message> findAllByConversationId(String conversationId, PageRequest of);
     List<Message> findAllByConversationId(String conversationId);
     List<Message> findAllByConversationIdAndTimeAfter(String conversationId,Long time);
+    @Transactional
     void deleteMessagesByConversationId(String conversationId);
 }

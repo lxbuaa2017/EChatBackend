@@ -68,13 +68,13 @@ public class FriendService {
             String conversationId = myId<friendId?(myId+"-"+friendId):(friendId+"-"+myId);
             Conversation conversation = conversationRepository.findByConversationId(conversationId);
             User friend = optionalUser.get();
-            user.getConversationList().remove(conversation);
-            friend.getConversationList().remove(conversation);
-            conversationRepository.delete(conversation);
-            userRepository.save(user);
-            userRepository.save(friend);
+            user.getConversationList().removeIf(each->each.getConversationId().equals(conversationId));
+            friend.getConversationList().removeIf(each->each.getConversationId().equals(conversationId));
+            userRepository.saveAndFlush(user);
+            userRepository.saveAndFlush(friend);
             friendRepository.delete(friendRelationship);
             messageRepository.deleteMessagesByConversationId(conversationId);
+            conversationRepository.delete(conversation);
             return true;
         } else {
             return false;

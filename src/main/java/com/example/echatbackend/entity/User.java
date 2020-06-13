@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.List;
 @Getter
 @Table(name = "tb_user")
 @EntityListeners(AuditingEntityListener.class)
+@Transactional
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

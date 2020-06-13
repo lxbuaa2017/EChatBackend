@@ -7,6 +7,7 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
+import com.example.echatbackend.controller.BaseController;
 import com.example.echatbackend.dao.ConversationRepository;
 import com.example.echatbackend.dao.GroupUserRepository;
 import com.example.echatbackend.dao.MessageRepository;
@@ -22,7 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.UnsupportedEncodingException;
@@ -36,13 +40,13 @@ import static com.alibaba.fastjson.JSON.toJSONString;
  * SocketHandler
  */
 @Component
-@Data
 /*
 
 这个handler可以算作表现层，这里本应只依赖业务层(即service)，但是目前持久层和业务层混在一起了，等一个有缘人把repository都干掉，全部换成service（逃
 
  */
-public class SocketHandler {
+@Transactional
+public class SocketHandler extends BaseController {
 
     /**
      * logger
@@ -68,6 +72,10 @@ public class SocketHandler {
     private FriendService friendService;
 
     private UserService userService;
+
+    private TokenService tokenService;
+
+    private GroupUserService groupUserService;
     /**
      * socketIOServer
      */
@@ -88,7 +96,7 @@ public class SocketHandler {
     public SocketHandler(SocketIOServer socketIOServer, MessageRepository messageRepository, UserRepository userRepository,
                          ConversationRepository conversationRepository, ConversationService conversationService,
                          MessageService messageService, GroupService groupService, GroupUserRepository groupUserRepository
-            , FriendService friendService,UserService userService) {
+            , FriendService friendService,UserService userService,TokenService tokenService,GroupUserService groupUserService) {
         this.socketIOServer = socketIOServer;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
@@ -99,6 +107,8 @@ public class SocketHandler {
         this.groupUserRepository = groupUserRepository;
         this.friendService = friendService;
         this.userService =userService;
+        this.tokenService = tokenService;
+        this.groupUserService = groupUserService;
     }
 
     /**
@@ -251,9 +261,6 @@ todo 可能得做点事情
             messageObj.setGroup(group);
         }
 
-        //此处看着冗余但有必要
-//        messageRepository.saveAndFlush(messageObj);
-//        messageObj.setTime(time);
         messageObj = messageService.saveAndFlush(messageObj);
         JSONObject response = messageObj.show();
         socketIOServer.getRoomOperations(conversationId).sendEvent("mes", response);
@@ -298,7 +305,7 @@ todo 可能得做点事情
     }
 
 
-    @OnEvent("agreeValidate")
+    @OnEvent("agreeValidate")//这里userY是自己
     public void agreeValidate(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) throws UnsupportedEncodingException {
         JSONObject itemJSONObj = JSONObject.parseObject(toJSONString(messageDto));
         logger.info("socket:agreeValidate");
@@ -316,16 +323,16 @@ todo 可能得做点事情
                 logger.info(name + " 已在群 " + groupId.toString() + " 中");
             } else {
                 Group group = groupService.findGroupById(groupId);
-                User user = userRepository.findById(userId).get();
+                User user = userService.findById(userId).get();
 
                 GroupUser groupUser = new GroupUser(group, user, false, group.getDescription());
                 Conversation conversation = group.getConversation();
                 conversation.getUsers().add(user);
                 user.getConversationList().add(conversation);
 
-                groupUserRepository.save(groupUser);
-                conversationRepository.save(conversation);
-                userRepository.save(user);
+                groupUserService.save(groupUser);
+                conversationService.save(conversation);
+                userService.save(user);
                 logger.info(name + " 已经成功加入群 " + groupId.toString());
                 //将申请信息设为已读
                 applyMessage.setStatus("1");
@@ -341,7 +348,10 @@ todo 可能得做点事情
                 agreeMessage.setUserM(user);
                 agreeMessage.setConversationId(userId.toString()+"-"+ConstValue.ECHAT_ID);
                 agreeMessage = messageService.saveAndFlush(agreeMessage);
-                socketIOServer.getRoomOperations(userId.toString()+"-"+ConstValue.ECHAT_ID).sendEvent("takeValidate", agreeMessage.show());
+                JSONObject agreeObj = agreeMessage.show();
+                agreeObj.put("group",group.show());
+                agreeObj.put("conversation",conversation.show(userId));
+                socketIOServer.getRoomOperations(userId.toString()+"-"+ConstValue.ECHAT_ID).sendEvent("takeValidate",agreeObj);
 
                 //通知群聊有新人加入
                 Message org_message = new Message();
@@ -406,8 +416,15 @@ todo 可能得做点事情
             userY.getConversationList().add(conversation);
             userRepository.save(userM);
             userRepository.save(userY);
-            socketIOServer.getRoomOperations(userMId+"-"+ConstValue.ECHAT_ID).sendEvent("takeValidate", agree_message.show());
-            socketIOClient.sendEvent("ValidateSuccess", "ok");
+            JSONObject agreeObj = agree_message.show();
+            agreeObj.put("friend",userY.show());
+            agreeObj.put("conversation",conversation.show(userMId));
+            socketIOServer.getRoomOperations(userMId+"-"+ConstValue.ECHAT_ID).sendEvent("takeValidate", agreeObj);
+            JSONObject validateObj = new JSONObject();
+            validateObj.put("friend",userM.show());
+            validateObj.put("conversation",conversation.show(userYId));
+            validateObj.put("state","friend");
+            socketIOClient.sendEvent("ValidateSuccess", validateObj);
         }
     }
 
@@ -532,6 +549,53 @@ todo 可能得做点事情
 //        socketIOServer.getRoomOperations(userMAndSystemConversationId).sendEvent("takeValidate", message1.show());
     }
 
+    @OnEvent("deleteMyFriend")
+    public void deleteMyfriend(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody JSONObject request) {
+        /*
+        1.删除Friend类
+        2.彼此会话列表删除对方的会话
+        3.删除会话本身
+         */
+
+        Integer friendId = request.getInteger("userId");
+        Integer myId = request.getInteger("myId");
+        User user = userService.findUserById(myId);
+        JSONObject info = new JSONObject();
+        info.put("type","friend");
+        info.put("itemId",friendId);
+        ResponseEntity<Object> res ;
+        if (friendService.deleteFriend(user, friendId)) {
+            res =  requestSuccess(info);
+        } else {
+            res = requestFail(-1, "删除失败，好友不存在");
+        }
+        User friend = userService.findUserById(friendId);
+        String friendName = friend.getUserName();
+        if(clientMap.get(friendName)!=null)
+             socketIOServer.getClient(clientMap.get(friendName)).sendEvent("beDeleted",res);
+        Message infoMes = new Message();
+        infoMes.setMessage( "好友"+user.getUserName()+" 已将你删除。");
+        infoMes.setStatus("0");
+        infoMes.setUserM(friend);
+        infoMes.setUserY(user);
+        infoMes.setState("friend");
+        infoMes.setType("info");
+        infoMes.setConversationId(friendId+"-"+ConstValue.ECHAT_ID);
+        infoMes = messageService.saveAndFlush(infoMes);
+        if(clientMap.get(friendName)!=null)
+            socketIOServer.getClient(clientMap.get(friendName)).sendEvent("mes",infoMes.show());
+    }
+
+    @OnEvent("quitGroup")
+    public void quitGroup(SocketIOClient socketIOClient, AckRequest ackRequest,@RequestBody JSONObject request){
+        Integer userId = request.getInteger("userId");
+        Integer groupId = request.getInteger("groupId");
+        Message org_message = groupService.quitGroup(userId,groupId);
+        if(org_message!=null){
+            socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org", org_message.show());
+        }
+    }
+
     @OnEvent("disconnect")
     public void disconnect(SocketIOClient socketIOClient, AckRequest ackRequest, @RequestBody Object messageDto) {
         logger.info("socket:disconnect");
@@ -540,4 +604,6 @@ todo 可能得做点事情
         socketIOServer.getBroadcastOperations().sendEvent("leaved", clientMap);
         logger.info("用户下线，uuid:" + uuid.toString());
     }
+
+
 }
