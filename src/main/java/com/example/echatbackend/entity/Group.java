@@ -4,8 +4,10 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Data
@@ -22,8 +24,11 @@ public class Group {
     @Setter
     private String avatar;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.REMOVE)
     private Conversation conversation;
+
+    @OneToMany(cascade = CascadeType.REMOVE,orphanRemoval = true,mappedBy = "group")
+    List<Message> messages;
 
     @Setter
     private String description;

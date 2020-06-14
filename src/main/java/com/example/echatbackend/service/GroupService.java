@@ -119,13 +119,13 @@ public class GroupService extends BaseService<Group, Integer, GroupRepository> {
         Conversation conversation = conversationRepository.findByConversationId(groupId.toString());
         List<User> userList = conversation.getUsers();
         userList.removeIf(each->each.getId().equals(userId));
-        user.getConversationList().remove(conversation);
+        user.getConversationList().removeIf(each->each.getConversationId().equals(groupId.toString()));
         groupUserRepository.delete(groupUser);
-        userRepository.save(user);
+        userRepository.saveAndFlush(user);
         conversation = conversationRepository.saveAndFlush(conversation);
         if (userList.size()==0){
             groupRepository.delete(group);
-            conversationRepository.delete(conversation);
+//            conversationRepository.delete(conversation);
         }
     }
 //    public boolean deleteGroup(User user, int groupId) {

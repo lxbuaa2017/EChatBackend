@@ -26,6 +26,8 @@ public class Conversation {
 
     private String type;  // group friend
 
+
+
     @OneToOne
     private Group group;
 

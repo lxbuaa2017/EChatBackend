@@ -37,6 +37,7 @@ public class Message {
 
     private String message = "";
 
+    private String emoji; //文件url
 
     private String style = "mess";  // mess 常规消息 emoji 表情包 img 图片 file 文件 ...
 
@@ -48,7 +49,7 @@ public class Message {
     //对于type为info的消息来说，则是-1拒绝，1同意
 
 
-    @OneToOne(fetch=FetchType.EAGER)
+    @ManyToOne(fetch=FetchType.EAGER)
     private Group group;
 
     @OneToOne(fetch=FetchType.EAGER)
@@ -94,6 +95,7 @@ public class Message {
         jsonObject.put("state", state);
         jsonObject.put("type", type);
         jsonObject.put("time", time);
+        jsonObject.put("emoji", emoji);
         jsonObject.put("style", style);
         jsonObject.put("status", status);
         jsonObject.put("read", nameList);

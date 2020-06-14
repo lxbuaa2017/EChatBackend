@@ -280,7 +280,9 @@ public class UserController extends BaseController {
         result.put("data", userInfo);
         return requestSuccess(result);
     }
-
+/*
+ todo 可以改异步
+ */
     @PostMapping("/user/updateUserInfo")
     public ResponseEntity<Object> updateUserInfo(@RequestBody JSONObject request) {
         User currentUser = tokenService.getCurrentUser();
@@ -331,7 +333,9 @@ public class UserController extends BaseController {
         response.put("data", userList.stream().map(User::show).toArray());
         return requestSuccess(response);
     }
-
+    /*
+     todo 可以改异步
+     */
     @GetMapping("/user/updateUserGender")
     public ResponseEntity<Object> updateUserGender(@RequestParam Integer gender) {
         User user = tokenService.getCurrentUser();
@@ -343,7 +347,9 @@ public class UserController extends BaseController {
             return requestSuccess(0);
         }
     }
-
+    /*
+     todo 可以改异步
+     */
     @GetMapping("/user/updateBgOpa")
     public ResponseEntity<Object> updateBgOpa(@RequestParam double bgOpa) {
         User user = tokenService.getCurrentUser();
@@ -353,11 +359,12 @@ public class UserController extends BaseController {
     }
 
     // 切换窗口
+    /*
+     */
     @GetMapping("/user/setConversation")
     public ResponseEntity<Object> getMoreMessages(@RequestParam String conversationId) throws UnsupportedEncodingException {
-        User user = tokenService.getCurrentUser();
-        stringRedisTemplate.opsForValue().set(user.getUserName(),conversationId);
-        messageService.setReadStatus(user,conversationId);
+        userService.setCurrentConversation(conversationId);
+        messageService.setReadStatus(conversationId);
         return requestSuccess(0);
     }
 }

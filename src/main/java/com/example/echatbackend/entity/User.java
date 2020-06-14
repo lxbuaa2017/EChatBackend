@@ -80,7 +80,7 @@ public class User {
 
 
     @Setter
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.REFRESH)
     @Fetch(FetchMode.SUBSELECT)
     private List<Conversation> conversationList = new ArrayList<>();
 

@@ -79,13 +79,13 @@ public class TestController extends BaseController {
         return requestSuccess(jsonObject);
     }
 
-    // 切换窗口
-    @GetMapping("/test/setConversation")
-    public ResponseEntity<Object> getMoreMessages() throws UnsupportedEncodingException {
-        User user = userRepository.findByUserName("lx2020");
-        messageService.setReadStatus(user,"123");
-        return requestSuccess(0);
-    }
+//    // 切换窗口
+//    @GetMapping("/test/setConversation")
+//    public ResponseEntity<Object> getMoreMessages() throws UnsupportedEncodingException {
+//        User user = userRepository.findByUserName("lx2020");
+//        messageService.setReadStatus(user,"123");
+//        return requestSuccess(0);
+//    }
 
     @GetMapping("/test/removeConversation")
     public ResponseEntity<Object> removeConversation() {

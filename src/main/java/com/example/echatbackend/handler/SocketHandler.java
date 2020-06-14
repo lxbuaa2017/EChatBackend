@@ -227,6 +227,7 @@ todo 可能得做点事情
         List<User> readUserList = new ArrayList<>();
 //        String message = EncodeUtil.toUTF8(itemJSONObj.getString("mes"));
         String message = itemJSONObj.getString("mes");
+        String emoji = itemJSONObj.getString("emoji");
         String messageType = itemJSONObj.getString("style");
 //        Long time = Long.valueOf(itemJSONObj.getString("time"));
         User userM = userService.findUserByName(userName);
@@ -260,7 +261,9 @@ todo 可能得做点事情
             messageObj.setState("group");
             messageObj.setGroup(group);
         }
-
+        if(emoji!=null){
+            messageObj.setEmoji(emoji);
+        }
         messageObj = messageService.saveAndFlush(messageObj);
         JSONObject response = messageObj.show();
         socketIOServer.getRoomOperations(conversationId).sendEvent("mes", response);
@@ -362,7 +365,12 @@ todo 可能得做点事情
                 org_message.setState("group");
                 org_message.setConversationId(groupId.toString());
                 org_message = messageService.saveAndFlush(org_message);
-                socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org", org_message.show());
+                JSONObject res = org_message.show();
+                res.put("userInfo",user.show());
+                res.put("addOrDelete",1);
+                Map<String, UUID> onlineUsers = conversationService.getOnlineUser(groupId.toString());
+                res.put("onlineUsers",onlineUsers);
+                socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org", res);
             }
         }
 
@@ -393,7 +401,7 @@ todo 可能得做点事情
             agree_message.setUserY(userY);
             agree_message.setConversationId(userMId+"-"+ConstValue.ECHAT_ID);
 //            Message agree_message1 = new Message();
-//            BeanUtils.copyProperties(agree_message,agree_message1);
+//            BeanUtils.copyProperties(agree_message,agree_message1);yi
 //            agree_message1.setId(null);
 //            agree_message1.setConversationId(userMId+"-"+ConstValue.ECHAT_ID);
             agree_message = messageService.saveAndFlush(agree_message);
@@ -562,7 +570,7 @@ todo 可能得做点事情
         User user = userService.findUserById(myId);
         JSONObject info = new JSONObject();
         info.put("type","friend");
-        info.put("itemId",friendId);
+        info.put("itemId",myId);
         ResponseEntity<Object> res ;
         if (friendService.deleteFriend(user, friendId)) {
             res =  requestSuccess(info);
@@ -583,7 +591,7 @@ todo 可能得做点事情
         infoMes.setConversationId(friendId+"-"+ConstValue.ECHAT_ID);
         infoMes = messageService.saveAndFlush(infoMes);
         if(clientMap.get(friendName)!=null)
-            socketIOServer.getClient(clientMap.get(friendName)).sendEvent("mes",infoMes.show());
+            socketIOServer.getClient(clientMap.get(friendName)).sendEvent("takeValidate",infoMes.show());
     }
 
     @OnEvent("quitGroup")
@@ -592,7 +600,12 @@ todo 可能得做点事情
         Integer groupId = request.getInteger("groupId");
         Message org_message = groupService.quitGroup(userId,groupId);
         if(org_message!=null){
-            socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org", org_message.show());
+            JSONObject res = org_message.show();
+            res.put("userInfo",org_message.getUserM().show());
+            res.put("addOrDelete",-1);
+            Map<String, UUID> onlineUsers = conversationService.getOnlineUser(groupId.toString());
+            res.put("onlineUsers",onlineUsers);
+            socketIOServer.getRoomOperations(groupId.toString()).sendEvent("org",res);
         }
     }
 

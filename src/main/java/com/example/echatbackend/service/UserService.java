@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +19,11 @@ public class UserService extends BaseService<User, Integer, UserRepository> {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private TokenService tokenService;
     public User findUserById(int id) {
         Optional<User> user = baseRepository.findById(id);
         if (user.isEmpty()) {
@@ -39,5 +46,11 @@ public class UserService extends BaseService<User, Integer, UserRepository> {
         Specification<User> userSpecification = (Specification<User>) (root, criteriaQuery, cb) -> cb.like(root.get("nickname"), "%" + keyword + "%");
         Sort sort = Sort.by(Sort.Order.asc("nickname"));
         return baseRepository.findAll(userSpecification, PageRequest.of(offset, limit, sort)).getContent();
+    }
+
+    @Async
+    public void setCurrentConversation(String conversationId){
+        User user = tokenService.getCurrentUser();
+        stringRedisTemplate.opsForValue().set(user.getUserName(),conversationId);
     }
 }
